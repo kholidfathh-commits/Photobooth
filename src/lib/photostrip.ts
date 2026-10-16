@@ -12,6 +12,9 @@ export const STRIP_BASE = {
   footer: 92,
 } as const;
 
+/** Ukuran maksimum hasil gabungan agar muat dikirim ke server (byte). */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
 export interface ComposeOptions {
   /** Pengali resolusi; 1 = lebar 600 px. */
   scale?: number;
@@ -222,14 +225,24 @@ export async function composePhotostrip(
   ctx.fillText(formatDate(date), centerX, footerTop + footer * 0.72);
   ctx.globalAlpha = 1;
 
-  const blob = await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob(
-      (b) =>
-        b ? resolve(b) : reject(new Error("Gagal membuat gambar photostrip")),
-      mimeType,
-      quality,
-    ),
-  );
+  const toBlob = (q: number) =>
+    new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (b) =>
+          b ? resolve(b) : reject(new Error("Gagal membuat gambar photostrip")),
+        mimeType,
+        q,
+      ),
+    );
+
+  // Batas unggah server (Vercel ±4,5 MB): turunkan kualitas JPEG sedikit
+  // demi sedikit bila berkas terlalu besar.
+  let q = quality;
+  let blob = await toBlob(q);
+  while (mimeType === "image/jpeg" && blob.size > MAX_UPLOAD_BYTES && q > 0.6) {
+    q = Math.round((q - 0.08) * 100) / 100;
+    blob = await toBlob(q);
+  }
 
   return { blob, width: size.width, height: size.height };
 }

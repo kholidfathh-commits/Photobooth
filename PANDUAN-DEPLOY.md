@@ -1,115 +1,91 @@
 # Panduan Deploy Street Photobooth
 
-Panduan ini membawa aplikasi dari laptop sampai siap dipakai di iPad saat acara.
-Perkiraan waktu: **±45–60 menit**, sekali saja.
+Kode sudah ada di GitHub: **kholidfathh-commits/Photobooth**.
+Sisanya cukup klik-klik di **Vercel** (±10 menit), tanpa menyalin kata sandi atau token.
 
-Yang dibutuhkan:
-- Akun **Gmail** (tempat semua foto pelanggan disimpan di Google Drive)
-- Akun **GitHub**, **Vercel**, dan **Turso** (semuanya gratis; bisa daftar pakai GitHub)
-- iPad dengan Safari (iPadOS 16.4 atau lebih baru)
+- **Foto pelanggan** disimpan di **Vercel Blob** (gratis ±1 GB ≈ 1.000+ photostrip).
+- **Data sesi & QR** disimpan di database **Turso** (gratis).
+- Google Drive bersifat **opsional**, bisa ditambahkan nanti (lihat bagian akhir).
 
 ---
 
-## 1. Unggah kode ke GitHub (±5 menit)
+## 1. Buat project di Vercel
 
-1. Buka https://github.com/new, beri nama misalnya `street-photobooth`, pilih **Private**, lalu **Create repository** (jangan centang README).
-2. Di terminal, dari folder `Fotobooth`, jalankan (ganti `USERNAME`):
+1. Buka https://vercel.com/new (masuk dengan akun GitHub `kholidfathh-commits`).
+2. Pada **Import Git Repository**, pilih **Photobooth** → **Import**.
+   - Bila repo tidak muncul: klik **Adjust GitHub App Permissions** → izinkan repo *Photobooth*.
+3. Jangan ubah pengaturan apa pun → klik **Deploy**.
+   *Deploy pertama ini **akan gagal** dengan pesan "Database belum disambungkan" — itu wajar.*
+   Klik **Continue to Dashboard** / buka project-nya.
 
-   ```bash
-   git remote add origin https://github.com/USERNAME/street-photobooth.git
-   git push -u origin main
-   ```
+## 2. Sambungkan penyimpanan foto (Vercel Blob)
 
-## 2. Siapkan Google Drive (±15 menit)
+1. Di project → tab **Storage** → **Create Database** → pilih **Blob** → **Continue**.
+2. Beri nama `photobooth-foto` → **Create** → pada pilihan environment biarkan semua tercentang → **Connect**.
 
-Foto disimpan di Drive akun Gmail-mu. Aplikasi hanya bisa melihat folder & berkas
-yang ia buat sendiri (izin `drive.file`), bukan isi Drive-mu yang lain.
+## 3. Sambungkan database (Turso)
 
-1. Buka https://console.cloud.google.com → **Buat project** baru, misalnya `Street Photobooth`.
-2. Menu **APIs & Services → Library** → cari **Google Drive API** → **Enable**.
-3. Menu **APIs & Services → OAuth consent screen**:
-   - User type: **External** → isi nama aplikasi (`Street Photobooth`) dan email.
-   - Bagian *Scopes* boleh dilewati.
-   - Setelah selesai, tekan **Publish app** / **Push to production**. *Penting:* bila
-     dibiarkan "Testing", izin kedaluwarsa setelah 7 hari dan unggahan akan berhenti.
-4. Menu **APIs & Services → Credentials → Create credentials → OAuth client ID**:
-   - Application type: **Desktop app** → **Create**.
-   - Salin **Client ID** dan **Client secret**.
-5. Di folder `Fotobooth`, buat berkas `.env.local` berisi:
+1. Masih di tab **Storage** → **Create Database** → pilih **Turso** (bagian *Marketplace*).
+2. Ikuti langkahnya: pilih paket **Free**, region **Singapore** bila ditanya, beri nama
+   `photobooth-db` → **Create** → **Connect** ke project *Photobooth*.
 
-   ```
-   GOOGLE_OAUTH_CLIENT_ID=isi-client-id
-   GOOGLE_OAUTH_CLIENT_SECRET=isi-client-secret
-   ```
+## 4. Deploy ulang
 
-6. Jalankan:
+1. Tab **Deployments** → klik **⋯** pada deployment teratas → **Redeploy** → **Redeploy**.
+2. Tunggu ±2 menit sampai statusnya **Ready**. Tabel database & frame dibuat otomatis.
+3. Buka alamat aplikasi (mis. `https://photobooth-xxxx.vercel.app`) — layar
+   "Yuk, foto bareng!" harus tampil.
 
-   ```bash
-   npm run drive:token
-   ```
-
-   Browser akan terbuka → masuk dengan **akun Gmail penyimpan foto** → izinkan.
-   (Bila muncul "Google hasn't verified this app", pilih *Advanced → Go to Street
-   Photobooth* — ini aplikasimu sendiri.) Terminal akan menampilkan
-   `GOOGLE_OAUTH_REFRESH_TOKEN=...` — **simpan nilai itu**, perlakukan seperti kata sandi.
-
-## 3. Siapkan database Turso (±5 menit)
-
-1. Daftar di https://turso.tech → **Create Database**, region **Singapore**.
-2. Salin **Database URL** (diawali `libsql://`) dan buat **token** (Create Token).
-
-## 4. Deploy ke Vercel (±10 menit)
-
-1. Buka https://vercel.com/new → **Import** repo `street-photobooth`.
-2. Sebelum Deploy, buka **Environment Variables** dan isi:
-
-   | Nama | Nilai |
-   |---|---|
-   | `DATABASE_URL` | URL Turso (`libsql://…`) |
-   | `DATABASE_AUTH_TOKEN` | token Turso |
-   | `GOOGLE_OAUTH_CLIENT_ID` | dari langkah 2 |
-   | `GOOGLE_OAUTH_CLIENT_SECRET` | dari langkah 2 |
-   | `GOOGLE_OAUTH_REFRESH_TOKEN` | dari langkah 2 |
-   | `OPERATOR_TOKEN` | kata acak panjang buatanmu |
-   | `CRON_SECRET` | kata acak panjang lain |
-
-3. Tekan **Deploy**. Tabel database dan frame awal dibuat otomatis saat build.
-4. Setelah selesai, salin alamat aplikasi (mis. `https://street-photobooth.vercel.app`),
-   tambahkan variabel `NEXT_PUBLIC_APP_URL` = alamat itu, lalu **Redeploy**
-   (Deployments → ⋯ → Redeploy) agar tautan QR memakai domain yang benar.
+> Kirim alamat aplikasinya ke Claude — Claude akan mengecek semuanya dari sisi server.
 
 ## 5. Siapkan iPad (±10 menit)
 
 1. Buka alamat aplikasi di **Safari**.
-2. Tekan tombol **Bagikan → Tambahkan ke Layar Utama**, lalu buka aplikasi dari ikon
-   "Photobooth" (tampil layar penuh, tanpa bilah Safari).
-3. Saat pertama kali ke halaman foto, **izinkan kamera**. Bila terlanjur menolak:
+2. Tombol **Bagikan → Tambahkan ke Layar Utama**, lalu buka aplikasi dari ikon
+   "Photobooth" (tampil layar penuh).
+3. Saat pertama ke halaman foto, **izinkan kamera**. Bila terlanjur menolak:
    Pengaturan → Safari → Kamera → **Izinkan**.
-4. Kunci iPad ke aplikasi ini dengan **Guided Access**: Pengaturan → Aksesibilitas →
-   Akses Terpandu → aktifkan & buat kode. Di aplikasi, tekan tombol samping 3× untuk mulai.
-5. Pengaturan → Layar & Kecerahan → **Kunci Otomatis: Jangan Pernah** (aplikasi juga
-   menjaga layar tetap menyala). Pasang iPad ke charger selama acara.
+4. Kunci iPad ke aplikasi dengan **Akses Terpandu**: Pengaturan → Aksesibilitas →
+   Akses Terpandu → aktifkan & buat kode. Di aplikasi, tekan tombol samping 3×.
+5. Pengaturan → Layar & Kecerahan → **Kunci Otomatis: Jangan Pernah**. Pasang ke charger.
 
 ## 6. Uji coba sebelum acara (wajib)
 
 - [ ] Satu sesi penuh: pilih frame → foto 3× → Lanjut → Simpan & Bagikan → QR muncul.
-- [ ] Pindai QR dengan 2–3 HP berbeda (iPhone & Android) → foto bisa disimpan ke galeri.
-- [ ] Cek Google Drive: folder **Street Photobooth / tanggal** berisi foto.
+- [ ] Pindai QR dengan 2–3 HP (iPhone & Android) → foto bisa disimpan ke galeri.
 - [ ] Coba di jaringan lemot (hotspot HP): unggahan mencoba ulang otomatis.
 - [ ] Tekan **Selesai** → layar kembali ke awal dan sesi sebelumnya bersih.
 
 ## Saat acara
 
-- Siapkan internet cadangan (hotspot HP). Foto yang gagal terunggah tetap bisa dicoba
-  ulang dari layar; jangan tekan "Selesai" sebelum muncul QR.
+- Siapkan internet cadangan (hotspot HP). Jangan tekan "Selesai" sebelum QR muncul.
 - Halaman operator: ikon roda gigi kecil di pojok kanan bawah layar awal.
-- Fitur cetak sedang **nonaktif**. Bila nanti ada printer AirPrint, nyalakan di halaman operator.
+- Fitur cetak sedang **nonaktif**; nyalakan di halaman operator bila nanti ada printer AirPrint.
+- Semua foto bisa dilihat/diunduh operator di Vercel → project → **Storage → photobooth-foto**.
 
 ## Bila ada masalah
 
 | Gejala | Penyebab & solusi |
 |---|---|
+| Deploy gagal "Database belum disambungkan" | Langkah 3 belum selesai → sambungkan Turso, lalu Redeploy |
 | "Kamera belum diizinkan" | Pengaturan → Safari → Kamera → Izinkan, lalu Coba Lagi |
-| Unggahan selalu gagal | Cek variabel Google di Vercel; jalankan ulang `npm run drive:token` bila token dicabut/kedaluwarsa |
-| QR membuka alamat `localhost` | `NEXT_PUBLIC_APP_URL` belum diisi → isi lalu Redeploy |
-| Frame tidak muncul | Cek `DATABASE_URL` / token Turso, lalu Redeploy |
+| Unggahan selalu gagal | Pastikan Blob sudah tersambung (langkah 2), lalu Redeploy |
+| Frame tidak muncul | Database belum tersambung → cek langkah 3, Redeploy |
+
+---
+
+## Opsional: simpan foto ke Google Drive (Gmail)
+
+Bila kelak ingin foto masuk ke Google Drive akun Gmail (bukan Vercel Blob):
+
+1. https://console.cloud.google.com → buat project → **APIs & Services → Library** →
+   aktifkan **Google Drive API**.
+2. **OAuth consent screen**: External → isi nama & email → **Publish app**
+   (wajib; bila "Testing", izin kedaluwarsa 7 hari).
+3. **Credentials → Create credentials → OAuth client ID** → jenis **Desktop app**.
+4. Buat `.env.local` di folder proyek berisi `GOOGLE_OAUTH_CLIENT_ID=…` dan
+   `GOOGLE_OAUTH_CLIENT_SECRET=…`, lalu jalankan `npm run drive:token` dan masuk
+   dengan akun Gmail penyimpan foto.
+5. Di Vercel → **Settings → Environment Variables** isi ketiga nilai
+   `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REFRESH_TOKEN`
+   → Redeploy. Bila nilai Google terisi, aplikasi otomatis memakai Drive.

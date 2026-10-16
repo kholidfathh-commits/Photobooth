@@ -29,6 +29,7 @@ export type DriveAuthConfig =
 
 export type DriveConfig =
   | { mode: "google"; rootFolderId: string; auth: DriveAuthConfig }
+  | { mode: "blob" }
   | { mode: "tiruan"; reason: string };
 
 export class DriveConfigError extends Error {
@@ -67,9 +68,11 @@ export function readDriveConfig(): DriveConfig {
   }
 
   if (!auth) {
+    // Tanpa Google: pakai Vercel Blob bila store sudah disambungkan di Vercel.
+    if (env("BLOB_READ_WRITE_TOKEN")) return { mode: "blob" };
     if (process.env.NODE_ENV === "production") {
       throw new DriveConfigError(
-        "Kredensial Google Drive belum diisi (Service Account atau OAuth)",
+        "Penyimpanan foto belum diatur: sambungkan Vercel Blob atau isi kredensial Google Drive",
       );
     }
     return {

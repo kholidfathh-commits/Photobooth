@@ -4,14 +4,15 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
 import * as schema from "./schema";
+import { databaseAuthToken, databaseUrl } from "./url";
 
 /**
- * Koneksi database. Lokal memakai file SQLite (default), produksi memakai
- * Turso/libSQL lewat DATABASE_URL + DATABASE_AUTH_TOKEN. Hanya untuk server.
+ * Koneksi database. Lokal memakai file SQLite; produksi memakai Turso
+ * (lihat src/db/url.ts untuk nama variabel yang didukung). Hanya untuk server.
  */
 const client = createClient({
-  url: process.env.DATABASE_URL ?? "file:./data/photobooth.db",
-  authToken: process.env.DATABASE_AUTH_TOKEN,
+  url: databaseUrl(),
+  authToken: databaseAuthToken(),
 });
 
 export const db = drizzle(client, { schema });

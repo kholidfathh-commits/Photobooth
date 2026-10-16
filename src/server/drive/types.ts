@@ -23,8 +23,11 @@ export interface UploadFileInput {
 }
 
 export interface DriveService {
-  /** "google" = Drive sungguhan, "tiruan" = disimpan lokal untuk pengembangan. */
-  readonly mode: "google" | "tiruan";
+  /**
+   * "google" = Google Drive, "blob" = Vercel Blob, "tiruan" = disimpan
+   * lokal untuk pengembangan.
+   */
+  readonly mode: "google" | "blob" | "tiruan";
   /** Pastikan rangkaian folder ada di bawah folder akar; kembalikan id terdalam. */
   ensureFolderPath(path: string[]): Promise<string>;
   uploadFile(input: UploadFileInput): Promise<DriveFile>;

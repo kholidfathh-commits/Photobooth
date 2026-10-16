@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791949015898,
+      "tag": "0000_sesi_foto",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791950524389,
+      "tag": "0001_hasil_foto",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791950952294,
+      "tag": "0002_sesi_unggahan",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791951372402,
+      "tag": "0003_token_unduh",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791952995686,
+      "tag": "0004_pengaturan_cetak",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791953146319,
+      "tag": "0005_job_cetak",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791953331792,
+      "tag": "0006_sesi_baru",
+      "breakpoints": true
+    }
+  ]
+}

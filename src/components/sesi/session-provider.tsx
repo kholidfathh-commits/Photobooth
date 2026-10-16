@@ -36,6 +36,14 @@ interface SessionContextValue {
   resetSession: () => void;
 }
 
+const SERVER_PLACEHOLDER: PhotoSession = {
+  id: "sesi-belum-dimulai",
+  frameId: MOCK_FRAMES[0].id,
+  status: "siap",
+  shots: [],
+  startedAt: "2026-01-01T00:00:00.000Z",
+};
+
 function closeSessionOnServer(sessionId: string) {
   const url = `/api/sessions/${encodeURIComponent(sessionId)}/close`;
   try {
@@ -57,7 +65,11 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   // Sesi awal kosong dengan id unik (format sama dengan yang diterima server).
   const [session, setSession] = useState<PhotoSession>(() =>
-    newSession(MOCK_FRAMES[0].id),
+    // Saat pra-render di server (tanpa nilai acak/waktu): sesi kosong statis.
+    // Di browser langsung sesi baru dengan id unik.
+    typeof window === "undefined"
+      ? SERVER_PLACEHOLDER
+      : newSession(MOCK_FRAMES[0].id),
   );
 
   const saveResult = useCallback(

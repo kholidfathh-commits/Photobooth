@@ -22,7 +22,8 @@ export interface PrintSettings {
 }
 
 export const DEFAULT_PRINT_SETTINGS: PrintSettings = {
-  printerEnabled: true,
+  // Nonaktif sampai operator menyalakannya (belum ada printer di lokasi).
+  printerEnabled: false,
   paperSize: "4R",
   orientation: "potret",
   stripsPerSheet: 2,

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { FramesProvider } from "@/components/frame/frames-provider";
+import { KeepAwake } from "@/components/keep-awake";
 import { SessionProvider } from "@/components/sesi/session-provider";
 
 import "./globals.css";
@@ -46,7 +47,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col select-none touch-manipulation">
         <FramesProvider>
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <KeepAwake />
+            {children}
+          </SessionProvider>
         </FramesProvider>
       </body>
     </html>

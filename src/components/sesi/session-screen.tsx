@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Camera, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { createMockCamera } from "@/lib/camera";
 import { useFrame } from "@/components/frame/frames-provider";
 
 import { Countdown } from "./countdown";
@@ -14,6 +13,7 @@ import { PhotostripSlots } from "./photostrip-slots";
 import { usePhotoSession } from "./session-provider";
 import { ShotGallery } from "./shot-gallery";
 import { ShotIndicator } from "./shot-indicator";
+import { useCamera } from "./use-camera";
 import { Viewfinder } from "./viewfinder";
 
 /** Lama kilatan putih setelah jepret sebelum lanjut ke foto berikutnya (ms). */
@@ -29,7 +29,13 @@ const FLASH_MS = 500;
 export function SessionScreen() {
   const router = useRouter();
   const { session, setSession } = usePhotoSession();
-  const [camera] = useState(createMockCamera);
+  const {
+    videoRef,
+    status: cameraStatus,
+    ready: cameraReady,
+    retry: retryCamera,
+    camera,
+  } = useCamera();
   /** Slot yang sedang diulang; null = pengambilan berurutan biasa. */
   const [retakeIndex, setRetakeIndex] = useState<number | null>(null);
   /** Foto yang sedang dilihat besar di galeri tinjau. */
@@ -68,8 +74,24 @@ export function SessionScreen() {
     const orderIndex = retakeIndex ?? taken;
     const capturing = camera.capture(`Foto ${orderIndex + 1}`);
 
+    // Hindari "unhandled rejection" sebelum ditunggu di bawah.
+    capturing.catch(() => {});
+
     const t = setTimeout(async () => {
-      const src = await capturing;
+      let src: string;
+      try {
+        src = await capturing;
+      } catch {
+        // Kamera mati/belum siap: batalkan jepretan ini, kembali ke siap.
+        if (!cancelled) {
+          setRetakeIndex(null);
+          setSession((s) => ({
+            ...s,
+            status: s.shots.length >= frame.slotCount ? "tinjau" : "siap",
+          }));
+        }
+        return;
+      }
       if (cancelled) return;
       const takenAt = new Date().toISOString();
       const shot = {
@@ -166,6 +188,9 @@ export function SessionScreen() {
           ) : (
             <Viewfinder
               status={session.status}
+              cameraStatus={cameraStatus}
+              videoRef={videoRef}
+              onRetryCamera={retryCamera}
               overlay={
                 session.status === "hitung-mundur" && (
                   <Countdown
@@ -217,7 +242,7 @@ export function SessionScreen() {
             <Button
               size="lg"
               onClick={startCountdown}
-              disabled={busy}
+              disabled={busy || !cameraReady}
               className="h-16 w-full rounded-2xl bg-white text-xl font-semibold text-neutral-950 hover:bg-white/90"
             >
               <Camera className="size-6" />

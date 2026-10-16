@@ -62,13 +62,17 @@ export async function findSessionById(id: string): Promise<SessionRow | null> {
 export async function insertSession(input: {
   frameId: string;
   deviceId?: string | null;
+  /** Id dari iPad (agar aman dikirim ulang); bawaan dibuat server. */
+  id?: string;
+  startedAt?: string;
 }): Promise<SessionRow> {
   const [row] = await db
     .insert(sessions)
     .values({
-      id: `sesi-${crypto.randomUUID()}`,
+      id: input.id ?? `sesi-${crypto.randomUUID()}`,
       frameId: input.frameId,
       deviceId: input.deviceId ?? null,
+      ...(input.startedAt && { startedAt: input.startedAt }),
     })
     .returning();
   return row;

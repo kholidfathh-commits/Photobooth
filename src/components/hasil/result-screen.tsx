@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, CloudUpload, RotateCcw } from "lucide-react";
 
 import { usePhotoSession } from "@/components/sesi/session-provider";
 import { Button } from "@/components/ui/button";
-import { findFrame } from "@/lib/mock-data";
+import { useFrame } from "@/components/frame/frames-provider";
 import { photostripSourceKey } from "@/lib/photostrip";
 import { newSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ const RESULT_SCALE = 3;
 export function ResultScreen() {
   const router = useRouter();
   const { session, setSession, uploadState } = usePhotoSession();
-  const frame = findFrame(session.frameId);
+  const frame = useFrame(session.frameId);
   const complete = session.shots.length >= frame.slotCount;
   const resultReady = Boolean(
     session.result?.sourceKey.startsWith(

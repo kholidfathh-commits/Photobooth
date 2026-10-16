@@ -12,7 +12,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import { MOCK_SESSION } from "@/lib/mock-data";
+import { MOCK_FRAMES } from "@/lib/mock-data";
 import { newSession } from "@/lib/session";
 import type { ComposedPhotostrip } from "@/lib/photostrip";
 import type { PhotoSession } from "@/lib/types";
@@ -36,6 +36,16 @@ interface SessionContextValue {
   resetSession: () => void;
 }
 
+function closeSessionOnServer(sessionId: string) {
+  const url = `/api/sessions/${encodeURIComponent(sessionId)}/close`;
+  try {
+    if (navigator.sendBeacon?.(url)) return;
+  } catch {
+    /* lanjut ke fetch */
+  }
+  void fetch(url, { method: "POST", keepalive: true }).catch(() => {});
+}
+
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 /**
@@ -45,7 +55,10 @@ const SessionContext = createContext<SessionContextValue | null>(null);
  * hilang saat halaman dimuat ulang, jadi foto pelanggan tidak tertinggal di iPad.
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<PhotoSession>(MOCK_SESSION);
+  // Sesi awal kosong dengan id unik (format sama dengan yang diterima server).
+  const [session, setSession] = useState<PhotoSession>(() =>
+    newSession(MOCK_FRAMES[0].id),
+  );
 
   const saveResult = useCallback(
     (result: ComposedPhotostrip, sourceKey: string) => {
@@ -69,10 +82,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSession,
   );
 
-  const resetSession = useCallback(
-    () => setSession((s) => newSession(s.frameId)),
-    [],
-  );
+  // Sesi terbaru untuk dibaca di callback tanpa membuatnya berubah-ubah.
+  const latest = useRef(session);
+  useEffect(() => {
+    latest.current = session;
+  });
+
+  const resetSession = useCallback(() => {
+    const current = latest.current;
+    // Beri tahu server bahwa sesi ditutup (hapus foto sementara). Pakai
+    // sendBeacon agar tetap terkirim walau halaman berpindah.
+    if (current.result || current.upload) closeSessionOnServer(current.id);
+    setSession(newSession(current.frameId));
+  }, []);
 
   return (
     <SessionContext.Provider

@@ -8,9 +8,13 @@ import "server-only";
  * 1. Service Account: GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
  *    (folder akar harus di Shared Drive, atau dibagikan ke email service
  *    account sebagai Editor — service account tidak punya kuota sendiri).
- * 2. OAuth akun Google biasa: GOOGLE_OAUTH_CLIENT_ID + GOOGLE_OAUTH_CLIENT_SECRET
- *    + GOOGLE_OAUTH_REFRESH_TOKEN (memakai kuota Drive akun tersebut).
- * Wajib: GOOGLE_DRIVE_ROOT_FOLDER_ID — id folder tujuan semua hasil foto.
+ * 2. OAuth akun Gmail biasa: GOOGLE_OAUTH_CLIENT_ID + GOOGLE_OAUTH_CLIENT_SECRET
+ *    + GOOGLE_OAUTH_REFRESH_TOKEN (memakai kuota Drive akun tersebut; izin
+ *    `drive.file` — aplikasi hanya bisa melihat berkas yang dibuatnya sendiri).
+ *    Ambil refresh token dengan `npm run drive:token`.
+ * GOOGLE_DRIVE_ROOT_FOLDER_ID: folder tujuan. Wajib untuk Service Account;
+ * untuk OAuth opsional — bila kosong, folder "Street Photobooth" dibuat di
+ * akar My Drive.
  * GOOGLE_DRIVE_MODE=tiruan memaksa mode lokal (pengembangan/uji).
  */
 
@@ -73,8 +77,9 @@ export function readDriveConfig(): DriveConfig {
       reason: "kredensial Google Drive belum diisi (mode pengembangan)",
     };
   }
-  if (!rootFolderId) {
+  if (!rootFolderId && auth.kind === "service-account") {
     throw new DriveConfigError("GOOGLE_DRIVE_ROOT_FOLDER_ID belum diisi");
   }
-  return { mode: "google", rootFolderId, auth };
+  // "root" = akar My Drive akun OAuth.
+  return { mode: "google", rootFolderId: rootFolderId ?? "root", auth };
 }

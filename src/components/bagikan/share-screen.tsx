@@ -10,7 +10,7 @@ import { usePhotoSession } from "@/components/sesi/session-provider";
 import { Button } from "@/components/ui/button";
 import { PrintPanel } from "@/components/cetak/print-panel";
 import { PrintSheet } from "@/components/cetak/print-sheet";
-import { findFrame } from "@/lib/mock-data";
+import { useFrame } from "@/components/frame/frames-provider";
 import { usePrintSettings } from "@/lib/print-settings-store";
 
 import { UploadStatus } from "./upload-status";
@@ -23,7 +23,7 @@ import { UploadStatus } from "./upload-status";
 export function ShareScreen() {
   const router = useRouter();
   const { session, uploadState, retryUpload } = usePhotoSession();
-  const frame = findFrame(session.frameId);
+  const frame = useFrame(session.frameId);
   const result = session.result;
   const { printerEnabled } = usePrintSettings();
 

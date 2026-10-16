@@ -9,7 +9,7 @@ import { QrCodeDisplay } from "@/components/bagikan/qr-code-display";
 import { usePhotoSession } from "@/components/sesi/session-provider";
 import { Button } from "@/components/ui/button";
 import { downloadUrl } from "@/lib/links";
-import { findFrame } from "@/lib/mock-data";
+import { useFrame } from "@/components/frame/frames-provider";
 
 /** Ajakan berbagi acara (sementara data tiruan; nanti dari pengaturan acara). */
 const EVENT_SHARE = {
@@ -52,17 +52,17 @@ export function ThanksScreen() {
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [secondsLeft, goHome]);
-  const frame = findFrame(session.frameId);
+  const frame = useFrame(session.frameId);
   const result = session.result;
   const uploaded =
     result && session.upload?.sourceKey === result.sourceKey
       ? session.upload
       : undefined;
-  // Pilih pesan dari id sesi agar tetap sama selama sesi ini.
+  // Pilih pesan dari waktu mulai sesi (sama di server & browser, tetap
+  // selama sesi ini).
   const message =
     THANKS_MESSAGES[
-      [...session.id].reduce((n, c) => n + c.charCodeAt(0), 0) %
-        THANKS_MESSAGES.length
+      new Date(session.startedAt).getSeconds() % THANKS_MESSAGES.length
     ];
 
   return (

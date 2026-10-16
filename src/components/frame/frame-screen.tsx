@@ -7,11 +7,11 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { usePhotoSession } from "@/components/sesi/session-provider";
 import { Button } from "@/components/ui/button";
-import { findFrame, MOCK_FRAMES } from "@/lib/mock-data";
 import { newSession } from "@/lib/session";
 import type { SlotCount } from "@/lib/types";
 
 import { FrameCarousel } from "./frame-carousel";
+import { useFrames } from "./frames-provider";
 import { FramePreview } from "./frame-preview";
 import { SlotIllustration } from "./slot-illustration";
 import { SlotCountToggle } from "./slot-count-toggle";
@@ -23,13 +23,14 @@ import { SlotCountToggle } from "./slot-count-toggle";
 export function FrameScreen() {
   const router = useRouter();
   const { session, setSession } = usePhotoSession();
-  const activeFrames = MOCK_FRAMES.filter((f) => f.isActive);
+  const { frames: allFrames, getFrame } = useFrames();
+  const activeFrames = allFrames.filter((f) => f.isActive);
   const [selectedId, setSelectedId] = useState(
     activeFrames.some((f) => f.id === session.frameId)
       ? session.frameId
       : activeFrames[0]?.id,
   );
-  const selected = findFrame(selectedId);
+  const selected = getFrame(selectedId);
   const [slotCount, setSlotCount] = useState<SlotCount>(selected.slotCount);
   const frames = activeFrames.filter((f) => f.slotCount === slotCount);
 

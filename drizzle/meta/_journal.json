@@ -50,6 +50,13 @@
       "when": 1791953331792,
       "tag": "0006_sesi_baru",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792160785802,
+      "tag": "0007_data_awal",
+      "breakpoints": true
     }
   ]
 }

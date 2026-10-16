@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { frames, type FrameRow } from "@/db/schema";
@@ -44,4 +44,14 @@ export async function findFrameById(id: string): Promise<Frame | null> {
     .where(eq(frames.id, id))
     .limit(1);
   return row ? frameFromRow(row) : null;
+}
+
+/** Semua frame aktif, urut nama. */
+export async function listActiveFrames(): Promise<Frame[]> {
+  const rows = await db
+    .select()
+    .from(frames)
+    .where(eq(frames.isActive, true))
+    .orderBy(asc(frames.createdAt), asc(frames.name));
+  return rows.map(frameFromRow);
 }

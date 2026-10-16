@@ -7,7 +7,13 @@ import { DriveError, type DriveFile, type DriveService } from "./types";
 
 const API = "https://www.googleapis.com/drive/v3";
 const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
-const SCOPES = ["https://www.googleapis.com/auth/drive"];
+/**
+ * Service Account butuh akses penuh ke folder yang dibagikan kepadanya.
+ * OAuth akun Gmail cukup `drive.file` (izin tidak sensitif, tanpa verifikasi
+ * Google): aplikasi hanya mengelola folder & berkas yang dibuatnya sendiri.
+ */
+export const SERVICE_ACCOUNT_SCOPES = ["https://www.googleapis.com/auth/drive"];
+export const OAUTH_SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const FILE_FIELDS =
   "id,name,md5Checksum,size,mimeType,webViewLink,webContentLink";
@@ -15,7 +21,11 @@ const TIMEOUT_MS = 60_000;
 
 function createAuth(auth: DriveAuthConfig): OAuth2Client {
   if (auth.kind === "service-account") {
-    return new JWT({ email: auth.email, key: auth.privateKey, scopes: SCOPES });
+    return new JWT({
+      email: auth.email,
+      key: auth.privateKey,
+      scopes: SERVICE_ACCOUNT_SCOPES,
+    });
   }
   const client = new OAuth2Client({
     clientId: auth.clientId,

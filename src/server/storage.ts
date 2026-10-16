@@ -1,6 +1,7 @@
 import "server-only";
 
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 /**
@@ -25,9 +26,17 @@ export function isSafeKey(key: string): boolean {
   );
 }
 
-export function createLocalStorage(
-  root = process.env.STORAGE_DIR ?? path.join(process.cwd(), "data", "files"),
-): FileStorage {
+/**
+ * Folder bawaan: STORAGE_DIR bila diisi; di Vercel (disk proyek hanya-baca)
+ * memakai folder sementara sistem; selain itu ./data/files.
+ */
+function defaultStorageRoot() {
+  if (process.env.STORAGE_DIR) return process.env.STORAGE_DIR;
+  if (process.env.VERCEL) return path.join(tmpdir(), "photobooth-files");
+  return path.join(process.cwd(), "data", "files");
+}
+
+export function createLocalStorage(root = defaultStorageRoot()): FileStorage {
   const resolve = (key: string) => {
     if (!isSafeKey(key)) throw new Error(`Kunci berkas tidak valid: ${key}`);
     // Folder data ditentukan saat runtime; jangan di-trace saat build.

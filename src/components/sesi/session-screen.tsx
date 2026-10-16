@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Camera, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { createMockCamera } from "@/lib/camera";
-import { findFrame } from "@/lib/mock-data";
+import { useFrame } from "@/components/frame/frames-provider";
 
 import { Countdown } from "./countdown";
 import { PhotostripSlots } from "./photostrip-slots";
@@ -34,7 +34,7 @@ export function SessionScreen() {
   const [retakeIndex, setRetakeIndex] = useState<number | null>(null);
   /** Foto yang sedang dilihat besar di galeri tinjau. */
   const [reviewIndex, setReviewIndex] = useState(0);
-  const frame = findFrame(session.frameId);
+  const frame = useFrame(session.frameId);
   const taken = session.shots.length;
   const busy =
     session.status === "hitung-mundur" || session.status === "memotret";

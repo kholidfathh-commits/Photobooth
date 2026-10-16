@@ -8,10 +8,15 @@ import {
   findPhotostripBySession,
   sessionExists,
 } from "@/server/repositories/photostrips";
+import { uploadPhotostripToDrive } from "@/server/services/drive-upload";
 import {
   MAX_FINAL_BYTES,
   saveFinalPhotostrip,
 } from "@/server/services/final-photostrip";
+import { buildQrPayload, publicBaseUrl } from "@/server/services/qr";
+
+// Simpan + unggah ke Drive bisa lama di jaringan event yang lambat.
+export const maxDuration = 60;
 
 /**
  * GET /api/sessions/:id/photostrip — hasil foto (photostrip) sebuah sesi.
@@ -47,6 +52,9 @@ export async function GET(
  * image/webp), maks 15 MB, lebar ≥ 1200 px, rasio sesuai frame sesi.
  * 201: { photostrip } (baru) · 200: { photostrip } (menimpa hasil lama,
  * token QR tetap).
+ * `?unggah=1` → sekaligus unggah ke Google Drive dan kembalikan
+ * { photostrip, upload, qr } — alur utama iPad (aman diulang: berkas yang
+ * sama tidak diunggah dua kali).
  */
 export async function POST(
   req: NextRequest,
@@ -68,14 +76,40 @@ export async function POST(
   try {
     const existed = Boolean(await findPhotostripBySession(id));
     const body = Buffer.from(await req.arrayBuffer());
-    const photostrip = await saveFinalPhotostrip(id, body);
+    const saved = await saveFinalPhotostrip(id, body);
+
+    // ?unggah=1 → langsung unggah ke Google Drive di permintaan yang sama
+    // (di Vercel berkas sementara tidak dijamin ada di permintaan berikutnya).
+    if (req.nextUrl.searchParams.get("unggah") !== "1") {
+      return Response.json(
+        { photostrip: toJson(saved) },
+        { status: existed ? 200 : 201 },
+      );
+    }
+    const { upload, photostrip } = await uploadPhotostripToDrive(id);
+    const qr = await buildQrPayload(
+      photostrip.qrToken,
+      publicBaseUrl(req.nextUrl.origin),
+    );
     return Response.json(
-      { photostrip: toJson(photostrip) },
+      {
+        photostrip: toJson(photostrip),
+        upload: {
+          status: upload.status,
+          attempts: upload.attempts,
+          fileName: upload.fileName,
+          driveFileId: upload.driveFileId,
+          uploadedAt: upload.finishedAt ?? upload.updatedAt,
+        },
+        qr,
+      },
       { status: existed ? 200 : 201 },
     );
   } catch (err) {
     if (err instanceof ServiceError) {
-      return apiError(err.status, err.code, err.message);
+      const res = apiError(err.status, err.code, err.message);
+      if (err.status === 503) res.headers.set("Retry-After", "5");
+      return res;
     }
     console.error("Gagal menyimpan hasil foto", err);
     return apiError(500, "gagal_menyimpan", "Hasil foto gagal disimpan");

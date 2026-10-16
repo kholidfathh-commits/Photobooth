@@ -8,10 +8,12 @@ import {
   type SetStateAction,
 } from "react";
 
-import { findFrame } from "@/lib/mock-data";
+import { useFrames } from "@/components/frame/frames-provider";
+import { getDeviceId } from "@/lib/device";
 import type { PhotoSession } from "@/lib/types";
 import {
-  createMockUploader,
+  createUploader,
+  UploadError,
   MAX_UPLOAD_ATTEMPTS,
   retryDelay,
   type UploadState,
@@ -57,7 +59,8 @@ export function useAutoUpload(
   session: PhotoSession,
   setSession: Dispatch<SetStateAction<PhotoSession>>,
 ): { state: UploadState | null; retry: () => void } {
-  const [uploader] = useState(() => createMockUploader());
+  const [uploader] = useState(() => createUploader());
+  const { getFrame } = useFrames();
   const [live, setLive] = useState<{ key: string; state: UploadState } | null>(
     null,
   );
@@ -90,7 +93,9 @@ export function useAutoUpload(
           const upload = await uploader.upload(result.blob, {
             sessionId: session.id,
             startedAt: session.startedAt,
-            frameName: findFrame(session.frameId).name,
+            frameId: session.frameId,
+            frameName: getFrame(session.frameId).name,
+            deviceId: getDeviceId(),
             signal,
             onProgress: (progress) =>
               report({ status: "mengunggah", progress, attempt }),
@@ -100,6 +105,8 @@ export function useAutoUpload(
         } catch (err) {
           if (signal.aborted) return;
           message = err instanceof Error ? err.message : "Unggahan gagal";
+          // Penolakan permanen (mis. foto tidak valid) tidak perlu dicoba ulang.
+          if (err instanceof UploadError && !err.retryable) break;
           if (attempt < MAX_UPLOAD_ATTEMPTS) {
             const delay = retryDelay(attempt);
             report({

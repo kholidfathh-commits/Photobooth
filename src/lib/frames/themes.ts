@@ -2,11 +2,15 @@
 // dibuat sekali oleh `npm run frames:build` (scripts/build-frames.ts) dan
 // disimpan di public/frames/<id>/. Semua hasil berukuran 9:16 (1080×1920).
 
+import { KOLEKSI, type Kategori, type KoleksiSpec } from "./koleksi";
+
+export { KATEGORI_URUT, type Kategori } from "./koleksi";
+
 /** Ukuran dasar hasil akhir (px) — pas layar HP. */
 export const CANVAS = { width: 1080, height: 1920 } as const;
 
 /** Naikkan bila gambar frame dibuat ulang, agar cache browser diperbarui. */
-export const FRAMES_VERSION = 1;
+export const FRAMES_VERSION = 2;
 
 export interface SlotRect {
   x: number;
@@ -20,8 +24,18 @@ export interface SlotRect {
  * - tumpuk-3: 3 foto bertumpuk, tulisan di bawah
  * - kolase-3: 1 foto besar + 2 kecil, area tulisan besar di bawah
  * - tumpuk-2: 2 foto besar bertumpuk, tulisan di bawah
+ * - tumpuk-3-atas / tumpuk-2-atas: seperti di atas, tulisan di bagian atas
+ * - tumpuk-3-kiri: 3 foto di kiri, tulisan tegak di kolom kanan
+ * - kolase-3-balik: 2 foto kecil di atas, 1 besar di bawahnya
  */
-export type LayoutKey = "tumpuk-3" | "kolase-3" | "tumpuk-2";
+export type LayoutKey =
+  | "tumpuk-3"
+  | "kolase-3"
+  | "tumpuk-2"
+  | "tumpuk-3-atas"
+  | "tumpuk-3-kiri"
+  | "kolase-3-balik"
+  | "tumpuk-2-atas";
 
 export const LAYOUTS: Record<LayoutKey, SlotRect[]> = {
   "tumpuk-3": [
@@ -38,6 +52,98 @@ export const LAYOUTS: Record<LayoutKey, SlotRect[]> = {
     { x: 80, y: 90, width: 920, height: 690 },
     { x: 80, y: 810, width: 920, height: 690 },
   ],
+  "tumpuk-3-atas": [
+    { x: 200, y: 280, width: 680, height: 510 },
+    { x: 200, y: 814, width: 680, height: 510 },
+    { x: 200, y: 1348, width: 680, height: 510 },
+  ],
+  "tumpuk-3-kiri": [
+    { x: 56, y: 171, width: 680, height: 510 },
+    { x: 56, y: 705, width: 680, height: 510 },
+    { x: 56, y: 1239, width: 680, height: 510 },
+  ],
+  "kolase-3-balik": [
+    { x: 60, y: 60, width: 468, height: 351 },
+    { x: 552, y: 60, width: 468, height: 351 },
+    { x: 60, y: 435, width: 960, height: 720 },
+  ],
+  "tumpuk-2-atas": [
+    { x: 80, y: 420, width: 920, height: 690 },
+    { x: 80, y: 1140, width: 920, height: 690 },
+  ],
+};
+
+/** Area tulisan utama tiap tata letak (dipakai desain frame koleksi). */
+export interface TextArea {
+  cx: number;
+  cy: number;
+  maxW: number;
+  maxH: number;
+  /** Tulisan diputar 90° (kolom tegak). */
+  vertical?: boolean;
+  /** Baris tanggal bila ada tulisan utama / bila tanpa tulisan. */
+  dateY: number;
+  dateYPolos: number;
+}
+
+export const TEXT_AREAS: Record<LayoutKey, TextArea> = {
+  "tumpuk-3": {
+    cx: 540,
+    cy: 1772,
+    maxW: 480,
+    maxH: 100,
+    dateY: 1855,
+    dateYPolos: 1806,
+  },
+  "tumpuk-2": {
+    cx: 540,
+    cy: 1655,
+    maxW: 660,
+    maxH: 150,
+    dateY: 1835,
+    dateYPolos: 1710,
+  },
+  "kolase-3": {
+    cx: 540,
+    cy: 1430,
+    maxW: 820,
+    maxH: 190,
+    dateY: 1650,
+    dateYPolos: 1540,
+  },
+  "kolase-3-balik": {
+    cx: 540,
+    cy: 1430,
+    maxW: 820,
+    maxH: 190,
+    dateY: 1650,
+    dateYPolos: 1540,
+  },
+  "tumpuk-3-atas": {
+    cx: 540,
+    cy: 128,
+    maxW: 520,
+    maxH: 104,
+    dateY: 232,
+    dateYPolos: 142,
+  },
+  "tumpuk-2-atas": {
+    cx: 540,
+    cy: 190,
+    maxW: 700,
+    maxH: 150,
+    dateY: 350,
+    dateYPolos: 214,
+  },
+  "tumpuk-3-kiri": {
+    cx: 908,
+    cy: 960,
+    maxW: 1380,
+    maxH: 190,
+    vertical: true,
+    dateY: 1842,
+    dateYPolos: 1842,
+  },
 };
 
 export interface DateStyle {
@@ -57,6 +163,7 @@ export interface DateStyle {
 export interface FrameTheme {
   id: string;
   name: string;
+  kategori: Kategori;
   slotCount: 2 | 3;
   layout: LayoutKey;
   /** Sudut membulat slot foto (px). */
@@ -93,10 +200,11 @@ const date = (
   ...extra,
 });
 
-export const THEMES: FrameTheme[] = [
+const ASLI: FrameTheme[] = [
   // ---------- 3 foto ----------
   {
     id: "klasik-putih",
+    kategori: "Minimalis",
     name: "Klasik Putih",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -109,6 +217,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "hitam-elegan",
+    kategori: "Elegan",
     name: "Hitam Elegan",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -121,6 +230,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "film-analog",
+    kategori: "Retro",
     name: "Film Analog",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -133,6 +243,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "neon-malam",
+    kategori: "Ceria",
     name: "Neon Malam",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -145,6 +256,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "pastel-manis",
+    kategori: "Ceria",
     name: "Pastel Manis",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -157,6 +269,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "kertas-kraft",
+    kategori: "Tekstur",
     name: "Kertas Kraft",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -169,6 +282,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "laut-biru",
+    kategori: "Alam",
     name: "Laut Biru",
     slotCount: 3,
     layout: "tumpuk-3",
@@ -181,6 +295,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "retro-70an",
+    kategori: "Retro",
     name: "Retro 70an",
     slotCount: 3,
     layout: "kolase-3",
@@ -193,6 +308,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "botani",
+    kategori: "Alam",
     name: "Botani",
     slotCount: 3,
     layout: "kolase-3",
@@ -205,6 +321,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "pop-ceria",
+    kategori: "Ceria",
     name: "Pop Ceria",
     slotCount: 3,
     layout: "kolase-3",
@@ -219,6 +336,7 @@ export const THEMES: FrameTheme[] = [
   // ---------- 2 foto ----------
   {
     id: "monokrom",
+    kategori: "Minimalis",
     name: "Monokrom",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -231,6 +349,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "polaroid",
+    kategori: "Retro",
     name: "Polaroid",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -243,6 +362,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "gradasi-jingga",
+    kategori: "Gradasi",
     name: "Gradasi Jingga",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -255,6 +375,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "kotak-kotak",
+    kategori: "Pola",
     name: "Kotak-Kotak",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -267,6 +388,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "y2k-krom",
+    kategori: "Ceria",
     name: "Y2K Krom",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -279,6 +401,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "galaksi",
+    kategori: "Alam",
     name: "Galaksi",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -291,6 +414,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "bunga-liar",
+    kategori: "Alam",
     name: "Bunga Liar",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -303,6 +427,7 @@ export const THEMES: FrameTheme[] = [
   },
   {
     id: "warna-warni",
+    kategori: "Ceria",
     name: "Warna-Warni",
     slotCount: 2,
     layout: "tumpuk-2",
@@ -314,6 +439,37 @@ export const THEMES: FrameTheme[] = [
     date: date(BOTTOM_2, "#334155", "sans", { weight: 700 }),
   },
 ];
+
+/** Ubah spesifikasi ringkas koleksi menjadi tema runtime. */
+function dariKoleksi(k: KoleksiSpec): FrameTheme {
+  const area = TEXT_AREAS[k.layout];
+  const polos = k.teks === null;
+  return {
+    id: k.id,
+    name: k.name,
+    kategori: k.kategori,
+    slotCount: LAYOUTS[k.layout].length as 2 | 3,
+    layout: k.layout,
+    radius: k.radius,
+    background: k.bg,
+    accent: k.ink,
+    placeholder: k.soft,
+    hasFront: Boolean(k.front),
+    date: date(
+      polos ? area.dateYPolos : area.dateY,
+      k.dateColor ?? k.ink,
+      k.dateFont,
+      {
+        size: polos ? 40 : 30,
+        spacing: polos ? 8 : 5,
+        weight: k.dateFont === "sans" ? 600 : 500,
+        format: k.dateFont === "mono" ? "titik" : "panjang",
+      },
+    ),
+  };
+}
+
+export const THEMES: FrameTheme[] = [...ASLI, ...KOLEKSI.map(dariKoleksi)];
 
 const BY_ID = new Map(THEMES.map((t) => [t.id, t]));
 

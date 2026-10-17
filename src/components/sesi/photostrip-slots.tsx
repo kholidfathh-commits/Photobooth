@@ -5,6 +5,8 @@ import { arrangeShots } from "@/lib/photostrip";
 import type { Frame, Shot } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+import { FrameDate } from "./frame-date";
+
 interface PhotostripSlotsProps {
   frame: Frame;
   shots: Shot[];
@@ -36,6 +38,7 @@ export function PhotostripSlots({
       )}
       style={{
         aspectRatio: `${CANVAS.width} / ${CANVAS.height}`,
+        containerType: "inline-size",
         backgroundColor: theme.background,
       }}
     >
@@ -95,6 +98,8 @@ export function PhotostripSlots({
           draggable={false}
         />
       )}
+
+      <FrameDate style={theme.date} />
 
       {!theme.hasArt && (
         <p

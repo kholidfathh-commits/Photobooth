@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- gambar pratinjau frame statis berukuran kecil */
 import { Check, Images } from "lucide-react";
 
+import { FrameDate } from "@/components/sesi/frame-date";
 import { PhotostripSlots } from "@/components/sesi/photostrip-slots";
 import { findTheme, frameAssetUrl } from "@/lib/frames/themes";
 import type { Frame } from "@/lib/types";
@@ -17,6 +18,7 @@ interface FrameCardProps {
  * dan status pilih (ditandai cincin + lencana "Dipilih").
  */
 export function FrameCard({ frame, selected, onSelect }: FrameCardProps) {
+  const theme = findTheme(frame.id);
   return (
     <button
       type="button"
@@ -34,15 +36,18 @@ export function FrameCard({ frame, selected, onSelect }: FrameCardProps) {
       )}
     >
       <div className="pointer-events-none w-full">
-        {findTheme(frame.id) ? (
-          // Gambar pratinjau kecil (ringan untuk jaringan acara).
-          <img
-            src={frameAssetUrl(frame.id, "pratinjau")}
-            alt=""
-            loading="lazy"
-            className="aspect-[9/16] w-full rounded-xl shadow-xl"
-            draggable={false}
-          />
+        {theme ? (
+          // Gambar pratinjau kecil (ringan untuk jaringan acara) + tanggal.
+          <div className="relative @container">
+            <img
+              src={frameAssetUrl(frame.id, "pratinjau")}
+              alt=""
+              loading="lazy"
+              className="aspect-[9/16] w-full rounded-xl shadow-xl"
+              draggable={false}
+            />
+            <FrameDate style={theme.date} />
+          </div>
         ) : (
           <PhotostripSlots frame={frame} shots={[]} activeIndex={-1} />
         )}

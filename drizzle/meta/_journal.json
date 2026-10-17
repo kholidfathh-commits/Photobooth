@@ -64,6 +64,13 @@
       "when": 1792245618499,
       "tag": "0008_frame_potretin",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792247502909,
+      "tag": "0009_frame_koleksi",
+      "breakpoints": true
     }
   ]
 }

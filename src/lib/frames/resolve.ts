@@ -20,6 +20,7 @@ export function resolveTheme(frame: Frame): FrameTheme & { hasArt: boolean } {
   return {
     id: frame.id,
     name: frame.name,
+    kategori: "Minimalis",
     slotCount: frame.slotCount,
     layout: frame.slotCount === 2 ? "tumpuk-2" : "tumpuk-3",
     radius: 16,

@@ -1,7 +1,8 @@
 // Membuat gambar semua frame Potretin: `npm run frames:build`.
 // Hasil: public/frames/<id>/latar.webp (+ depan.webp) + pratinjau.webp.
 // Tambahkan --lembar untuk membuat lembar kontak (cek visual) di
-// .frames-preview/semua-frame.png.
+// .frames-preview/semua-frame.png. --hanya=id1,id2 (awalan id) untuk
+// membuat sebagian frame saja.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -15,7 +16,12 @@ import {
   THEMES,
   type FrameTheme,
 } from "../src/lib/frames/themes";
+import { KOLEKSI } from "../src/lib/frames/koleksi";
+import { formatFrameDate } from "../src/lib/frames/resolve";
 import { buildArt, makeWordmark, type FontKey, type Fonts } from "./frames/art";
+import { buildKoleksiArt } from "./frames/koleksi-art";
+
+const KOLEKSI_BY_ID = new Map(KOLEKSI.map((k) => [k.id, k]));
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT = path.join(ROOT, "public", "frames");
@@ -39,6 +45,15 @@ const FONT_FILES: Record<FontKey, string> = {
   rubikMono: "rubik-mono-one/files/rubik-mono-one-latin-400-normal.woff",
   righteous: "righteous/files/righteous-latin-400-normal.woff",
   abril: "abril-fatface/files/abril-fatface-latin-400-normal.woff",
+  montserrat: "montserrat/files/montserrat-latin-700-normal.woff",
+  cormorant:
+    "cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff",
+  cormorantItalic:
+    "cormorant-garamond/files/cormorant-garamond-latin-500-italic.woff",
+  allura: "allura/files/allura-latin-400-normal.woff",
+  dmSerif: "dm-serif-display/files/dm-serif-display-latin-400-normal.woff",
+  dmSerifItalic:
+    "dm-serif-display/files/dm-serif-display-latin-400-italic.woff",
 };
 
 function loadFonts(): Fonts {
@@ -101,17 +116,39 @@ function samplePhotos(theme: FrameTheme) {
   );
 }
 
+/** Tanggal contoh (hanya untuk lembar kontak; aslinya ditulis saat foto). */
+function sampleDate(theme: FrameTheme) {
+  const d = theme.date;
+  const family =
+    d.font === "mono"
+      ? "Menlo, monospace"
+      : d.font === "serif"
+        ? "Georgia, serif"
+        : "Helvetica, Arial, sans-serif";
+  const text = formatFrameDate(new Date(2026, 8, 28), d.format);
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS.width}" height="${CANVAS.height}"><text x="${d.x}" y="${d.y}" text-anchor="middle" dominant-baseline="middle" font-family="${family}" font-weight="${d.weight}" font-size="${d.size}" letter-spacing="${d.spacing}" fill="${d.color}">${text}</text></svg>`,
+  );
+}
+
 async function main() {
   const sheet = process.argv.includes("--lembar");
   const fonts = loadFonts();
   const word = makeWordmark(fonts);
-  rmSync(OUT, { recursive: true, force: true });
   const sheetTiles: Buffer[] = [];
 
+  const only = process.argv.find((a) => a.startsWith("--hanya="));
+  const pilih = only ? only.slice(8).split(",") : null;
+  // Bangun ulang semua → hapus dulu folder lama; --hanya=… → timpa saja.
+  if (!pilih) rmSync(OUT, { recursive: true, force: true });
   for (const theme of THEMES) {
+    if (pilih && !pilih.some((p) => theme.id.startsWith(p))) continue;
     const dir = path.join(OUT, theme.id);
     mkdirSync(dir, { recursive: true });
-    const art = buildArt(theme, word);
+    const spec = KOLEKSI_BY_ID.get(theme.id);
+    const art = spec
+      ? buildKoleksiArt(spec, theme, word)
+      : buildArt(theme, word);
     const latar = await sharp(Buffer.from(art.back))
       .webp({ quality: 88 })
       .toBuffer();
@@ -142,7 +179,10 @@ async function main() {
 
     if (sheet) {
       const tile = await sharp(latar)
-        .composite(layers(samplePhotos(theme)))
+        .composite([
+          ...layers(samplePhotos(theme)),
+          { input: sampleDate(theme) },
+        ])
         .toBuffer()
         .then((b) => sharp(b).resize(270, 480).png().toBuffer());
       sheetTiles.push(tile);

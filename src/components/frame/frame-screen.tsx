@@ -7,8 +7,11 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { usePhotoSession } from "@/components/sesi/session-provider";
 import { Button } from "@/components/ui/button";
+import { findTheme, KATEGORI_URUT } from "@/lib/frames/themes";
 import { newSession } from "@/lib/session";
-import type { SlotCount } from "@/lib/types";
+import type { Frame, SlotCount } from "@/lib/types";
+
+import { CategoryChips, type KategoriPilihan } from "./category-chips";
 
 import { FrameCarousel } from "./frame-carousel";
 import { useFrames } from "./frames-provider";
@@ -16,9 +19,11 @@ import { FramePreview } from "./frame-preview";
 import { SlotIllustration } from "./slot-illustration";
 import { SlotCountToggle } from "./slot-count-toggle";
 
+const kategoriOf = (frame: Frame) => findTheme(frame.id)?.kategori;
+
 /**
- * Halaman Pilih Frame: pilih jumlah foto (2/3), geser galeri, ketuk frame,
- * lihat pratinjau besar berisi foto contoh, lalu mulai sesi foto.
+ * Halaman Pilih Frame: pilih jumlah foto (2/3) dan kategori, geser galeri,
+ * ketuk frame, lihat pratinjau besar berisi foto contoh, lalu mulai sesi.
  */
 export function FrameScreen() {
   const router = useRouter();
@@ -32,15 +37,42 @@ export function FrameScreen() {
   );
   const selected = getFrame(selectedId);
   const [slotCount, setSlotCount] = useState<SlotCount>(selected.slotCount);
-  const frames = activeFrames.filter((f) => f.slotCount === slotCount);
+  const [kategori, setKategori] = useState<KategoriPilihan>("Semua");
 
-  // Ganti jumlah foto → frame terpilih pindah ke frame pertama yang cocok.
+  const bySlot = (count: SlotCount) =>
+    activeFrames.filter((f) => f.slotCount === count);
+  const byKategori = (list: Frame[], k: KategoriPilihan) =>
+    k === "Semua" ? list : list.filter((f) => kategoriOf(f) === k);
+
+  const sameSlot = bySlot(slotCount);
+  const frames = byKategori(sameSlot, kategori);
+  const kategoriOptions = [
+    { kategori: "Semua" as const, count: sameSlot.length },
+    ...KATEGORI_URUT.map((k) => ({
+      kategori: k,
+      count: byKategori(sameSlot, k).length,
+    })).filter((o) => o.count > 0),
+  ];
+
+  // Frame terpilih tidak ada di daftar baru → pilih frame pertamanya.
+  const keepSelection = (list: Frame[]) => {
+    if (!list.some((f) => f.id === selected.id) && list[0])
+      setSelectedId(list[0].id);
+  };
+
   const changeSlotCount = (count: SlotCount) => {
     setSlotCount(count);
-    if (selected.slotCount !== count) {
-      const first = activeFrames.find((f) => f.slotCount === count);
-      if (first) setSelectedId(first.id);
+    let k = kategori;
+    if (byKategori(bySlot(count), k).length === 0) {
+      k = "Semua";
+      setKategori(k);
     }
+    keepSelection(byKategori(bySlot(count), k));
+  };
+
+  const changeKategori = (k: KategoriPilihan) => {
+    setKategori(k);
+    keepSelection(byKategori(sameSlot, k));
   };
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -73,10 +105,16 @@ export function FrameScreen() {
         </div>
       </header>
 
+      <CategoryChips
+        options={kategoriOptions}
+        value={kategori}
+        onChange={changeKategori}
+      />
+
       <main className="flex min-h-0 flex-1 items-center">
         {frames.length > 0 ? (
           <FrameCarousel
-            key={slotCount}
+            key={`${slotCount}-${kategori}`}
             frames={frames}
             selectedId={selected.id}
             onSelect={setSelectedId}

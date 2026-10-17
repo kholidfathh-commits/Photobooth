@@ -1,4 +1,4 @@
-// Desain 18 frame Potretin dalam bentuk SVG (latar + lapisan depan).
+// Desain 18 frame Potretin pertama dalam bentuk SVG (latar + lapisan depan).
 // Dipakai oleh scripts/build-frames.ts untuk membuat gambar WebP di
 // public/frames/<id>/. Semua koordinat dalam kanvas 1080×1920 (9:16).
 
@@ -11,8 +11,8 @@ import {
   type SlotRect,
 } from "../../src/lib/frames/themes";
 
-const W = CANVAS.width;
-const H = CANVAS.height;
+export const W = CANVAS.width;
+export const H = CANVAS.height;
 
 export type FontKey =
   | "playfair"
@@ -32,7 +32,13 @@ export type FontKey =
   | "fredokaBold"
   | "rubikMono"
   | "righteous"
-  | "abril";
+  | "abril"
+  | "montserrat"
+  | "cormorant"
+  | "cormorantItalic"
+  | "allura"
+  | "dmSerif"
+  | "dmSerifItalic";
 
 export type Fonts = Record<FontKey, Font>;
 
@@ -44,7 +50,7 @@ export interface Art {
 // ---------------------------------------------------------------- utilitas
 
 /** PRNG kecil berbiji agar hiasan acak selalu sama tiap build. */
-function rng(seed: number) {
+export function rng(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -55,15 +61,15 @@ function rng(seed: number) {
   };
 }
 
-const r1 = (n: number) => Math.round(n * 10) / 10;
+export const r1 = (n: number) => Math.round(n * 10) / 10;
 
-function svg(body: string, defs = "") {
+export function svg(body: string, defs = "") {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${
     defs ? `<defs>${defs}</defs>` : ""
   }${body}</svg>`;
 }
 
-function rect(
+export function rect(
   x: number,
   y: number,
   w: number,
@@ -75,7 +81,7 @@ function rect(
 }
 
 /** Kotak di sekeliling slot, melebar `pad` px. */
-function around(s: SlotRect, pad: number, attrs: string, rx = 0) {
+export function around(s: SlotRect, pad: number, attrs: string, rx = 0) {
   return rect(
     s.x - pad,
     s.y - pad,
@@ -86,17 +92,23 @@ function around(s: SlotRect, pad: number, attrs: string, rx = 0) {
   );
 }
 
-function heart(cx: number, cy: number, size: number, attrs: string, rot = 0) {
+export function heart(
+  cx: number,
+  cy: number,
+  size: number,
+  attrs: string,
+  rot = 0,
+) {
   return `<path transform="translate(${r1(cx)} ${r1(cy)}) rotate(${rot}) scale(${r1(size)})" d="M0 0.38 C-0.62 -0.02 -0.5 -0.66 0 -0.32 C0.5 -0.66 0.62 -0.02 0 0.38 Z" ${attrs}/>`;
 }
 
 /** Bintang 4 sudut (kilau). */
-function sparkle(cx: number, cy: number, size: number, attrs: string) {
+export function sparkle(cx: number, cy: number, size: number, attrs: string) {
   return `<path transform="translate(${r1(cx)} ${r1(cy)}) scale(${r1(size)})" d="M0 -1 C0.12 -0.25 0.25 -0.12 1 0 C0.25 0.12 0.12 0.25 0 1 C-0.12 0.25 -0.25 0.12 -1 0 C-0.25 -0.12 -0.12 -0.25 0 -1 Z" ${attrs}/>`;
 }
 
 /** Bintang ledakan (starburst) n sudut. */
-function burst(
+export function burst(
   cx: number,
   cy: number,
   rOut: number,
@@ -113,7 +125,7 @@ function burst(
   return `<polygon points="${pts.join(" ")}" ${attrs}/>`;
 }
 
-function flower(
+export function flower(
   cx: number,
   cy: number,
   r: number,
@@ -130,7 +142,7 @@ function flower(
 }
 
 /** Ranting daun: batang lengkung + daun berselang-seling. */
-function sprig(
+export function sprig(
   x: number,
   y: number,
   angle: number,
@@ -189,7 +201,7 @@ function pathData(commands: unknown[]): string {
     .join("");
 }
 
-interface WordOpts {
+export interface WordOpts {
   cx: number;
   cy: number;
   maxW: number;
@@ -269,12 +281,12 @@ export function makeWordmark(fonts: Fonts) {
   };
 }
 
-type WordFn = ReturnType<typeof makeWordmark>;
+export type WordFn = ReturnType<typeof makeWordmark>;
 
-const glow = (id: string, std: number) =>
+export const glow = (id: string, std: number) =>
   `<filter id="${id}" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="${std}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
 
-const softShadow = (id: string) =>
+export const softShadow = (id: string) =>
   `<filter id="${id}" x="-10%" y="-10%" width="130%" height="130%"><feGaussianBlur in="SourceAlpha" stdDeviation="10"/><feOffset dx="0" dy="8" result="o"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
 
 // ---------------------------------------------------------------- desain

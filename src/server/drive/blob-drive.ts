@@ -44,8 +44,10 @@ function toDriveError(err: unknown): DriveError {
  * didukung: dideteksi otomatis saat unggahan pertama.
  */
 export function createBlobDrive(): DriveService {
+  // Store dibuat "Private" (disarankan Vercel); "public" didukung lewat
+  // BLOB_ACCESS=public atau terdeteksi otomatis bila akses privat ditolak.
   let access: Access =
-    process.env.BLOB_ACCESS === "private" ? "private" : "public";
+    process.env.BLOB_ACCESS === "public" ? "public" : "private";
 
   const idFor = (r: { url: string; pathname: string }) =>
     access === "private" ? `private:${r.pathname}` : r.url;
@@ -79,9 +81,9 @@ export function createBlobDrive(): DriveService {
         try {
           res = await upload(pathname, data, mimeType);
         } catch (err) {
-          // Store dibuat sebagai "private" → ulangi dengan akses privat.
-          if (access === "public" && err instanceof BlobAccessError) {
-            access = "private";
+          // Jenis store berbeda dari dugaan → ulangi dengan akses sebaliknya.
+          if (err instanceof BlobAccessError) {
+            access = access === "private" ? "public" : "private";
             res = await upload(pathname, data, mimeType);
           } else {
             throw err;

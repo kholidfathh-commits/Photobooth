@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { photostrips } from "@/db/schema";
+import { photostrips, uploads } from "@/db/schema";
 import {
   demoDownloadInfo,
   isValidToken,
@@ -15,8 +15,6 @@ import { getDriveService } from "@/server/drive";
 import { findPhotostripByToken } from "@/server/repositories/photostrips";
 import { findSessionWithFrame } from "@/server/repositories/sessions";
 import { storage } from "@/server/storage";
-
-import { getUploadMetadata } from "./upload-metadata";
 
 /**
  * Data publik halaman unduh berdasarkan token QR — hanya yang aman
@@ -38,12 +36,14 @@ export async function getPublicDownload(
   }
   const found = await findSessionWithFrame(strip.sessionId);
   const [width, height] = strip.resolution.split("x").map(Number);
-  let fileName = `street-photobooth-${qrToken}.jpg`;
-  try {
-    fileName = (await getUploadMetadata(strip.sessionId)).fileName;
-  } catch {
-    /* berkas lokal mungkin sudah dibersihkan; nama bawaan cukup */
-  }
+  // Nama berkas yang tercatat saat diunggah (tetap ada walau berkas
+  // sementara di server sudah dibersihkan).
+  const [upload] = await db
+    .select({ fileName: uploads.fileName })
+    .from(uploads)
+    .where(eq(uploads.photostripId, strip.id))
+    .limit(1);
+  const fileName = upload?.fileName ?? `street-photobooth-${qrToken}.jpg`;
   return {
     qrToken,
     imageUrl: `/api/unduh/${qrToken}/berkas`,

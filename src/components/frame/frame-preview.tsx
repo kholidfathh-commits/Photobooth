@@ -47,7 +47,7 @@ export function FramePreview({ frame, onClose, onStart }: FramePreviewProps) {
         <div
           className={cn(
             "max-h-[calc(100dvh-3rem)] shrink-0 overflow-y-auto",
-            frame.slotCount === 3 ? "w-64" : "w-80",
+            "w-[min(20rem,calc((100dvh-3rem)*9/16))]",
           )}
         >
           <PhotostripSlots frame={frame} shots={sampleShots} activeIndex={-1} />

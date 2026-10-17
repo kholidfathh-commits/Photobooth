@@ -142,7 +142,7 @@ export function FrameCarousel({
         role="radiogroup"
         aria-label="Pilihan frame"
         onKeyDown={onKeyDown}
-        className="flex min-h-0 w-full snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-[calc(50%-7rem)] py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 w-full snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-[calc(50%-6.5rem)] py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {frames.map((frame, i) => (
           <FrameCard

@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element -- gambar pratinjau frame statis berukuran kecil */
 import { Check, Images } from "lucide-react";
 
 import { PhotostripSlots } from "@/components/sesi/photostrip-slots";
+import { findTheme, frameAssetUrl } from "@/lib/frames/themes";
 import type { Frame } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,14 +27,25 @@ export function FrameCard({ frame, selected, onSelect }: FrameCardProps) {
       tabIndex={selected ? 0 : -1}
       onClick={onSelect}
       className={cn(
-        "flex w-56 shrink-0 snap-center flex-col items-center gap-3 rounded-3xl p-3 transition-all duration-200 [-webkit-tap-highlight-color:transparent] active:scale-95",
+        "flex w-52 shrink-0 snap-center flex-col items-center gap-3 rounded-3xl p-3 transition-all duration-200 [-webkit-tap-highlight-color:transparent] active:scale-95",
         selected
           ? "scale-105 bg-white/10 ring-4 ring-white"
           : "opacity-70 hover:opacity-100",
       )}
     >
       <div className="pointer-events-none w-full">
-        <PhotostripSlots frame={frame} shots={[]} activeIndex={-1} />
+        {findTheme(frame.id) ? (
+          // Gambar pratinjau kecil (ringan untuk jaringan acara).
+          <img
+            src={frameAssetUrl(frame.id, "pratinjau")}
+            alt=""
+            loading="lazy"
+            className="aspect-[9/16] w-full rounded-xl shadow-xl"
+            draggable={false}
+          />
+        ) : (
+          <PhotostripSlots frame={frame} shots={[]} activeIndex={-1} />
+        )}
       </div>
 
       <div className="flex w-full flex-col gap-2 px-1 text-left">

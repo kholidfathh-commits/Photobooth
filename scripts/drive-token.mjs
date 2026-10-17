@@ -23,15 +23,20 @@ function fromEnvFile(name) {
     const line = readFileSync(".env.local", "utf8")
       .split("\n")
       .find((l) => l.startsWith(`${name}=`));
-    return line?.slice(name.length + 1).trim().replace(/^["']|["']$/g, "");
+    return line
+      ?.slice(name.length + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
   } catch {
     return undefined;
   }
 }
 
-const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID || fromEnvFile("GOOGLE_OAUTH_CLIENT_ID");
+const clientId =
+  process.env.GOOGLE_OAUTH_CLIENT_ID || fromEnvFile("GOOGLE_OAUTH_CLIENT_ID");
 const clientSecret =
-  process.env.GOOGLE_OAUTH_CLIENT_SECRET || fromEnvFile("GOOGLE_OAUTH_CLIENT_SECRET");
+  process.env.GOOGLE_OAUTH_CLIENT_SECRET ||
+  fromEnvFile("GOOGLE_OAUTH_CLIENT_SECRET");
 
 if (!clientId || !clientSecret) {
   console.error(
@@ -40,7 +45,11 @@ if (!clientId || !clientSecret) {
   process.exit(1);
 }
 
-const client = new OAuth2Client({ clientId, clientSecret, redirectUri: REDIRECT });
+const client = new OAuth2Client({
+  clientId,
+  clientSecret,
+  redirectUri: REDIRECT,
+});
 const url = client.generateAuthUrl({
   access_type: "offline",
   prompt: "consent", // selalu minta refresh token baru
@@ -62,15 +71,23 @@ const server = createServer(async (req, res) => {
       url: "https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)",
     });
     res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-    res.end("Berhasil! Kembali ke terminal untuk menyalin refresh token. Tab ini boleh ditutup.");
-    console.log(`\n✓ Terhubung ke Drive akun: ${about.data.user?.emailAddress}`);
+    res.end(
+      "Berhasil! Kembali ke terminal untuk menyalin refresh token. Tab ini boleh ditutup.",
+    );
+    console.log(
+      `\n✓ Terhubung ke Drive akun: ${about.data.user?.emailAddress}`,
+    );
     if (!tokens.refresh_token) {
       console.log(
         "✗ Google tidak mengirim refresh token. Cabut akses aplikasi di https://myaccount.google.com/permissions lalu jalankan lagi.",
       );
     } else {
-      console.log("\nGOOGLE_OAUTH_REFRESH_TOKEN=" + tokens.refresh_token + "\n");
-      console.log("Simpan nilai di atas sebagai rahasia (Vercel → Environment Variables).");
+      console.log(
+        "\nGOOGLE_OAUTH_REFRESH_TOKEN=" + tokens.refresh_token + "\n",
+      );
+      console.log(
+        "Simpan nilai di atas sebagai rahasia (Vercel → Environment Variables).",
+      );
     }
   } catch (err) {
     res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });

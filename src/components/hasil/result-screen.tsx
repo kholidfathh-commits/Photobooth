@@ -14,11 +14,8 @@ import { cn } from "@/lib/utils";
 
 import { ComposedPhotostrip, type ComposeStatus } from "./composed-photostrip";
 
-/**
- * Skala resolusi hasil akhir: lebar 600 × 3 = 1800 px, cukup tajam untuk
- * dicetak (≈ 300 dpi pada lebar 6 inci).
- */
-const RESULT_SCALE = 3;
+/** Skala hasil akhir: 1 = 1080×1920 (9:16, seukuran layar HP). */
+const RESULT_SCALE = 1;
 
 /**
  * Halaman Hasil Foto (/hasil): pratinjau akhir photostrip — semua jepretan
@@ -83,7 +80,7 @@ export function ResultScreen() {
           aria-label="Pratinjau photostrip"
           className={cn(
             "max-h-full shrink-0 overflow-y-auto",
-            frame.slotCount === 3 ? "w-64 lg:w-72" : "w-80 lg:w-96",
+            "w-[min(22rem,calc((100dvh-8rem)*9/16))]",
           )}
         >
           <ComposedPhotostrip

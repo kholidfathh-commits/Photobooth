@@ -1,24 +1,22 @@
-// Penggabungan jepretan + frame menjadi satu gambar photostrip (di browser,
-// lewat canvas) — hemat beban server, sesuai arsitektur PRD.
+// Penggabungan jepretan + frame menjadi satu gambar 9:16 (di browser, lewat
+// canvas) — hemat beban server. Desain frame: src/lib/frames/.
 
+import {
+  dateFont,
+  formatFrameDate,
+  resolveTheme,
+  slotRectsFor,
+} from "./frames/resolve";
+import { CANVAS, frameAssetUrl, LAYOUTS, type SlotRect } from "./frames/themes";
 import type { Frame, Shot } from "./types";
-
-/** Ukuran dasar photostrip (px) sebelum dikali skala. */
-export const STRIP_BASE = {
-  width: 600,
-  padding: 28,
-  gap: 16,
-  radius: 14,
-  footer: 92,
-} as const;
 
 /** Ukuran maksimum hasil gabungan agar muat dikirim ke server (byte). */
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export interface ComposeOptions {
-  /** Pengali resolusi; 1 = lebar 600 px. */
+  /** Pengali resolusi; 1 = 1080×1920 (9:16, seukuran layar HP). */
   scale?: number;
-  /** Tanggal yang dicetak di bawah caption. */
+  /** Tanggal yang dicetak di frame. */
   date?: Date;
   mimeType?: "image/jpeg" | "image/png";
   quality?: number;
@@ -30,37 +28,19 @@ export interface ComposedPhotostrip {
   height: number;
 }
 
-/** Ukuran akhir photostrip untuk jumlah slot & skala tertentu. */
-export function photostripSize(slotCount: number, scale = 1) {
-  const { width, padding, gap, footer } = STRIP_BASE;
-  const slotW = width - padding * 2;
-  const slotH = Math.round((slotW * 3) / 4);
-  const height = padding + slotCount * slotH + (slotCount - 1) * gap + footer;
+export type { SlotRect };
+
+/** Ukuran akhir photostrip (selalu 9:16) untuk skala tertentu. */
+export function photostripSize(scale = 1) {
   return {
-    width: Math.round(width * scale),
-    height: Math.round(height * scale),
-    slotW,
-    slotH,
+    width: Math.round(CANVAS.width * scale),
+    height: Math.round(CANVAS.height * scale),
   };
 }
 
-export interface SlotRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/** Posisi tiap slot foto (koordinat dasar, sebelum skala), dari atas ke bawah. */
-export function photostripSlotRects(slotCount: number): SlotRect[] {
-  const { padding, gap } = STRIP_BASE;
-  const { slotW, slotH } = photostripSize(slotCount);
-  return Array.from({ length: slotCount }, (_, i) => ({
-    x: padding,
-    y: padding + i * (slotH + gap),
-    width: slotW,
-    height: slotH,
-  }));
+/** Posisi tiap slot foto frame (koordinat dasar 1080×1920). */
+export function photostripSlotRects(frame: Frame): SlotRect[] {
+  return slotRectsFor(frame);
 }
 
 /**
@@ -105,11 +85,11 @@ export function photostripSourceKey(frame: Frame, shots: Shot[]): string {
 /** Batas waktu memuat satu foto sebelum dianggap gagal (ms). */
 const LOAD_TIMEOUT_MS = 10_000;
 
-function loadImage(src: string, index: number): Promise<HTMLImageElement> {
+function loadImage(src: string, label: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const timer = setTimeout(
-      () => reject(new Error(`Foto ${index + 1} terlalu lama dimuat`)),
+      () => reject(new Error(`${label} terlalu lama dimuat`)),
       LOAD_TIMEOUT_MS,
     );
     img.decoding = "async";
@@ -119,7 +99,7 @@ function loadImage(src: string, index: number): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       clearTimeout(timer);
-      reject(new Error(`Foto ${index + 1} tidak bisa dibaca`));
+      reject(new Error(`${label} tidak bisa dibaca`));
     };
     img.src = src;
   });
@@ -149,17 +129,10 @@ function drawCover(
   ctx.restore();
 }
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
-
 /**
- * Gabungkan jepretan sesi ke dalam frame menjadi satu gambar photostrip.
- * Slot diisi sesuai orderIndex; slot tanpa foto dibiarkan berwarna polos.
+ * Gabungkan jepretan sesi ke dalam frame menjadi satu gambar 9:16:
+ * latar frame → foto di tiap slot → hiasan depan → tanggal.
+ * Slot tanpa foto diisi warna polos.
  */
 export async function composePhotostrip(
   frame: Frame,
@@ -171,8 +144,8 @@ export async function composePhotostrip(
     quality = 0.92,
   }: ComposeOptions = {},
 ): Promise<ComposedPhotostrip> {
-  const { padding, gap, radius, footer } = STRIP_BASE;
-  const size = photostripSize(frame.slotCount, scale);
+  const theme = resolveTheme(frame);
+  const size = photostripSize(scale);
 
   const canvas = document.createElement("canvas");
   canvas.width = size.width;
@@ -184,46 +157,60 @@ export async function composePhotostrip(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // Latar frame
-  ctx.fillStyle = frame.background;
-  ctx.fillRect(0, 0, STRIP_BASE.width, size.height / scale);
-
-  // Slot foto, diisi sesuai urutan pengambilan
-  const rects = photostripSlotRects(frame.slotCount);
-  const images = await Promise.all(
-    arrangeShots(frame.slotCount, shots).map((shot, i) =>
-      shot ? loadImage(shot.src, i) : null,
+  const [latar, depan, ...photos] = await Promise.all([
+    theme.hasArt
+      ? loadImage(frameAssetUrl(theme.id, "latar"), "Gambar frame")
+      : null,
+    theme.hasArt && theme.hasFront
+      ? loadImage(frameAssetUrl(theme.id, "depan"), "Hiasan frame")
+      : null,
+    ...arrangeShots(frame.slotCount, shots).map((shot, i) =>
+      shot ? loadImage(shot.src, `Foto ${i + 1}`) : null,
     ),
-  );
-  images.forEach((img, i) => {
+  ]);
+
+  // 1) Latar frame (atau warna polos untuk frame tanpa desain).
+  if (latar) {
+    ctx.drawImage(latar, 0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    ctx.fillStyle = theme.background;
+    ctx.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+
+  // 2) Foto di slot, sesuai urutan pengambilan.
+  const rects = LAYOUTS[theme.layout];
+  photos.forEach((img, i) => {
     const { x, y, width, height } = rects[i];
     if (img) {
-      drawCover(ctx, img, x, y, width, height, radius);
+      drawCover(ctx, img, x, y, width, height, theme.radius);
     } else {
-      ctx.fillStyle = `${frame.accent}22`;
+      ctx.fillStyle = theme.placeholder;
       ctx.beginPath();
-      ctx.roundRect(x, y, width, height, radius);
+      ctx.roundRect(x, y, width, height, theme.radius);
       ctx.fill();
     }
   });
 
-  // Caption & tanggal di bagian bawah
-  const footerTop =
-    padding + frame.slotCount * size.slotH + (frame.slotCount - 1) * gap;
-  const centerX = STRIP_BASE.width / 2;
-  ctx.fillStyle = frame.accent;
-  ctx.textAlign = "center";
+  // 3) Hiasan yang menimpa foto (selotip, bunga, kilau, …).
+  if (depan) ctx.drawImage(depan, 0, 0, CANVAS.width, CANVAS.height);
+
+  // Frame tanpa desain: tulis merek dengan font sistem.
+  if (!latar) {
+    ctx.fillStyle = theme.accent;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "700 96px Georgia, 'Times New Roman', serif";
+    ctx.fillText("Potretin", CANVAS.width / 2, theme.date.y - 100);
+  }
+
+  // 4) Tanggal sesi.
+  const d = theme.date;
+  ctx.fillStyle = d.color;
+  ctx.textAlign = d.align;
   ctx.textBaseline = "middle";
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "6px";
-  ctx.font =
-    "700 24px ui-sans-serif, -apple-system, 'Helvetica Neue', Arial, sans-serif";
-  ctx.fillText(frame.caption.toUpperCase(), centerX, footerTop + footer * 0.42);
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "1px";
-  ctx.globalAlpha = 0.7;
-  ctx.font =
-    "500 16px ui-sans-serif, -apple-system, 'Helvetica Neue', Arial, sans-serif";
-  ctx.fillText(formatDate(date), centerX, footerTop + footer * 0.72);
-  ctx.globalAlpha = 1;
+  ctx.font = dateFont(d);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = `${d.spacing}px`;
+  ctx.fillText(formatFrameDate(date, d.format), d.x, d.y);
 
   const toBlob = (q: number) =>
     new Promise<Blob>((resolve, reject) =>

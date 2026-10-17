@@ -46,7 +46,7 @@ export function ComposedPhotostrip({
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
-  const size = photostripSize(frame.slotCount);
+  const size = photostripSize();
   const sourceKey = `${photostripSourceKey(frame, shots)}@${scale}`;
   const result =
     session.result?.sourceKey === sourceKey ? session.result : undefined;

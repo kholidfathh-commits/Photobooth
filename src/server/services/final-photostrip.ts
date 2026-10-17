@@ -5,7 +5,7 @@ import sharp, { type Metadata } from "sharp";
 
 import { db } from "@/db";
 import { frames, photostrips, sessions, type PhotostripRow } from "@/db/schema";
-import { photostripSize, STRIP_BASE } from "@/lib/photostrip";
+import { CANVAS } from "@/lib/frames/themes";
 import { ServiceError } from "@/server/errors";
 import { storage } from "@/server/storage";
 
@@ -14,7 +14,7 @@ import { withUniqueToken } from "./qr";
 /** Batas ukuran berkas hasil akhir yang diterima (byte). */
 export const MAX_FINAL_BYTES = 15 * 1024 * 1024;
 /** Lebar minimum agar tetap tajam saat dicetak (px). */
-export const MIN_FINAL_WIDTH = 1200;
+export const MIN_FINAL_WIDTH = 1080;
 /** Toleransi beda rasio tinggi:lebar terhadap tata letak frame. */
 const RATIO_TOLERANCE = 0.02;
 
@@ -82,13 +82,13 @@ export async function saveFinalPhotostrip(
       `Lebar minimal ${MIN_FINAL_WIDTH} px agar tajam saat dicetak (didapat ${width} px)`,
     );
   }
-  const expected = photostripSize(row.slotCount, width / STRIP_BASE.width);
-  const ratioDiff = Math.abs(height / width - expected.height / expected.width);
+  // Semua hasil berukuran 9:16 (lihat CANVAS).
+  const ratioDiff = Math.abs(height / width - CANVAS.height / CANVAS.width);
   if (ratioDiff > RATIO_TOLERANCE) {
     throw new ServiceError(
       422,
       "rasio_tidak_cocok",
-      `Ukuran ${width}x${height} tidak cocok dengan frame ${row.slotCount} foto`,
+      `Ukuran ${width}x${height} bukan 9:16`,
     );
   }
 

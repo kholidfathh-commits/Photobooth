@@ -4,6 +4,7 @@ import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { frames, type FrameRow } from "@/db/schema";
+import { THEMES } from "@/lib/frames/themes";
 import type { Frame, SlotCount } from "@/lib/types";
 
 interface FrameLayout {
@@ -53,5 +54,10 @@ export async function listActiveFrames(): Promise<Frame[]> {
     .from(frames)
     .where(eq(frames.isActive, true))
     .orderBy(asc(frames.createdAt), asc(frames.name));
-  return rows.map(frameFromRow);
+  // Urutan mengikuti katalog desain; frame lain (dari database) di belakang.
+  const order = (id: string) => {
+    const i = THEMES.findIndex((t) => t.id === id);
+    return i === -1 ? THEMES.length : i;
+  };
+  return rows.map(frameFromRow).sort((a, b) => order(a.id) - order(b.id));
 }

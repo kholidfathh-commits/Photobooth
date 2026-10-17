@@ -57,6 +57,13 @@
       "when": 1792160785802,
       "tag": "0007_data_awal",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792245618499,
+      "tag": "0008_frame_potretin",
+      "breakpoints": true
     }
   ]
 }

@@ -50,3 +50,6 @@ next-env.d.ts
 # artefak sync NgodingPakeAI (config.json boleh di-commit)
 /.ngodingpakeai/*
 !/.ngodingpakeai/config.json
+
+# lembar kontak frame (cek visual)
+/.frames-preview

@@ -1,46 +1,21 @@
-// Data tiruan untuk tahap frontend. Akan diganti respons API backend
-// (GET daftar frame, sesi aktif) di fase berikutnya.
+// Data cadangan & contoh untuk tampilan (frame katalog, foto contoh).
 
+import { THEMES } from "./frames/themes";
 import type { Frame, PhotoSession, Shot } from "./types";
 
-export const MOCK_FRAMES: Frame[] = [
-  {
-    id: "frame-cfd-pagi",
-    name: "CFD Pagi",
-    slotCount: 3,
-    background: "#f6efe3",
-    accent: "#c2410c",
-    caption: "Car Free Day",
-    isActive: true,
-  },
-  {
-    id: "frame-kampus",
-    name: "Kampus Ceria",
-    slotCount: 2,
-    background: "#1e293b",
-    accent: "#facc15",
-    caption: "Hari Kampus",
-    isActive: true,
-  },
-  {
-    id: "frame-senja-kota",
-    name: "Senja Kota",
-    slotCount: 2,
-    background: "#3b0764",
-    accent: "#fda4af",
-    caption: "Street Photobooth",
-    isActive: true,
-  },
-  {
-    id: "frame-minimalis",
-    name: "Minimalis",
-    slotCount: 3,
-    background: "#ffffff",
-    accent: "#171717",
-    caption: "Street Photobooth",
-    isActive: true,
-  },
-];
+/**
+ * Frame cadangan (dipakai sebelum daftar dari server termuat / saat offline):
+ * seluruh katalog frame Potretin.
+ */
+export const MOCK_FRAMES: Frame[] = THEMES.map((t) => ({
+  id: t.id,
+  name: t.name,
+  slotCount: t.slotCount,
+  background: t.background,
+  accent: t.accent,
+  caption: "Potretin",
+  isActive: true,
+}));
 
 /** Gambar SVG polos sebagai pengganti hasil jepretan kamera. */
 export function mockShotImage(label: string, from: string, to: string): string {

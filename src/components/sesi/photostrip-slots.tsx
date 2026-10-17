@@ -1,4 +1,6 @@
-/* eslint-disable @next/next/no-img-element -- gambar berupa data URL dari kamera, bukan aset statis */
+/* eslint-disable @next/next/no-img-element -- gambar frame & jepretan kamera (data URL), bukan aset yang dioptimasi */
+import { resolveTheme } from "@/lib/frames/resolve";
+import { CANVAS, frameAssetUrl, LAYOUTS } from "@/lib/frames/themes";
 import { arrangeShots } from "@/lib/photostrip";
 import type { Frame, Shot } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -8,36 +10,62 @@ interface PhotostripSlotsProps {
   shots: Shot[];
   /** Slot yang sedang diisi/diulang (diberi cincin). -1 = tidak ada. */
   activeIndex?: number;
+  className?: string;
 }
 
-/** Photostrip mini: slot terisi menampilkan jepretan, slot kosong bernomor. */
+const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+
+/**
+ * Pratinjau photostrip 9:16 persis seperti hasil akhir: gambar latar frame,
+ * jepretan di tiap slot (slot kosong bernomor), lalu hiasan depan.
+ */
 export function PhotostripSlots({
   frame,
   shots,
   activeIndex = shots.length,
+  className,
 }: PhotostripSlotsProps) {
+  const theme = resolveTheme(frame);
+  const rects = LAYOUTS[theme.layout];
+
   return (
     <div
-      className="flex w-full flex-col gap-2 rounded-2xl p-3 shadow-xl"
-      style={{ backgroundColor: frame.background }}
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl shadow-xl",
+        className,
+      )}
+      style={{
+        aspectRatio: `${CANVAS.width} / ${CANVAS.height}`,
+        backgroundColor: theme.background,
+      }}
     >
+      {theme.hasArt && (
+        <img
+          src={frameAssetUrl(theme.id, "latar")}
+          alt=""
+          className="absolute inset-0 size-full"
+          draggable={false}
+        />
+      )}
+
       {arrangeShots(frame.slotCount, shots).map((shot, i) => {
+        const r = rects[i];
         const isActive = i === activeIndex;
         return (
           <div
             key={i}
             className={cn(
-              "relative aspect-[4/3] overflow-hidden rounded-lg",
-              !shot &&
-                "flex items-center justify-center border-2 border-dashed",
-              isActive && "ring-4 ring-offset-2",
+              "absolute flex items-center justify-center overflow-hidden",
+              isActive &&
+                "ring-4 ring-sky-400 ring-offset-2 ring-offset-transparent",
             )}
             style={{
-              borderColor: shot ? undefined : frame.accent,
-              ...(isActive && {
-                ["--tw-ring-color" as string]: frame.accent,
-                ["--tw-ring-offset-color" as string]: frame.background,
-              }),
+              left: pct(r.x, CANVAS.width),
+              top: pct(r.y, CANVAS.height),
+              width: pct(r.width, CANVAS.width),
+              height: pct(r.height, CANVAS.height),
+              borderRadius: `${(theme.radius / r.width) * 100}% / ${(theme.radius / r.height) * 100}%`,
+              backgroundColor: shot ? undefined : theme.placeholder,
             }}
           >
             {shot ? (
@@ -49,8 +77,8 @@ export function PhotostripSlots({
               />
             ) : (
               <span
-                className="text-3xl font-semibold opacity-60"
-                style={{ color: frame.accent }}
+                className="text-2xl font-semibold opacity-60"
+                style={{ color: theme.accent }}
               >
                 {i + 1}
               </span>
@@ -58,12 +86,24 @@ export function PhotostripSlots({
           </div>
         );
       })}
-      <p
-        className="pt-1 text-center text-xs font-semibold tracking-[0.2em] uppercase"
-        style={{ color: frame.accent }}
-      >
-        {frame.caption}
-      </p>
+
+      {theme.hasArt && theme.hasFront && (
+        <img
+          src={frameAssetUrl(theme.id, "depan")}
+          alt=""
+          className="pointer-events-none absolute inset-0 size-full"
+          draggable={false}
+        />
+      )}
+
+      {!theme.hasArt && (
+        <p
+          className="absolute inset-x-0 bottom-[6%] text-center font-serif text-xl font-bold"
+          style={{ color: theme.accent }}
+        >
+          Potretin
+        </p>
+      )}
     </div>
   );
 }

@@ -58,7 +58,7 @@ export function UploadStatus({ state, onRetry }: UploadStatusProps) {
         <>
           <CloudUpload className="size-10 animate-pulse text-sky-300" />
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold">Menyimpan ke Google Drive…</h2>
+            <h2 className="text-2xl font-bold">Menyimpan fotomu…</h2>
             <p className="text-neutral-400">
               Tunggu sebentar, fotomu sedang diunggah.
             </p>
@@ -91,7 +91,7 @@ export function UploadStatus({ state, onRetry }: UploadStatusProps) {
             <div>
               <h2 className="text-2xl font-bold">Tersimpan!</h2>
               <p className="text-neutral-400">
-                Fotomu sudah aman di Google Drive.
+                Fotomu sudah tersimpan dengan aman.
               </p>
             </div>
           </div>

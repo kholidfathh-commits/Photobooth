@@ -116,9 +116,9 @@ export function ResultScreen() {
             >
               <CloudUpload className="size-4" />
               {uploadState.status === "mengunggah" &&
-                `Menyimpan otomatis ke Google Drive… ${Math.round(uploadState.progress * 100)}%`}
+                `Menyimpan foto otomatis… ${Math.round(uploadState.progress * 100)}%`}
               {uploadState.status === "berhasil" &&
-                "Sudah tersimpan otomatis di Google Drive"}
+                "Foto sudah tersimpan otomatis"}
               {(uploadState.status === "mencoba-ulang" ||
                 uploadState.status === "menunggu-internet") &&
                 "Penyimpanan tersendat — sedang dicoba lagi otomatis"}

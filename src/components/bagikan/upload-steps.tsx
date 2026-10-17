@@ -21,7 +21,7 @@ function stepsFor(state: UploadState): Step[] {
           : "tersendat";
   return [
     { label: "Foto digabung", state: "selesai" },
-    { label: "Unggah ke Drive", state: upload },
+    { label: "Menyimpan foto", state: upload },
     {
       label: "QR siap",
       state: state.status === "berhasil" ? "selesai" : "menunggu",

@@ -1,4 +1,4 @@
-# Street Photobooth
+# Potretin
 
 Photobooth web untuk iPad di CFD, acara kampus, dan event: pilih frame → foto
 otomatis dengan hitung mundur → photostrip → simpan ke Google Drive → pelanggan

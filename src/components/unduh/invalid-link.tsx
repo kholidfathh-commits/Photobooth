@@ -28,7 +28,7 @@ export function InvalidLink() {
         </span>
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-[0.3em] text-neutral-400 uppercase">
-            Street Photobooth
+            Potretin
           </p>
           <h1 className="text-3xl font-bold tracking-tight">
             Tautan tidak valid

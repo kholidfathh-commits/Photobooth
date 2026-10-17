@@ -1,4 +1,4 @@
-# Panduan Deploy Street Photobooth
+# Panduan Deploy Potretin
 
 Kode sudah ada di GitHub: **kholidfathh-commits/Photobooth**.
 Sisanya cukup klik-klik di **Vercel** (±10 menit), tanpa menyalin kata sandi atau token.
@@ -42,7 +42,7 @@ Sisanya cukup klik-klik di **Vercel** (±10 menit), tanpa menyalin kata sandi at
 
 1. Buka alamat aplikasi di **Safari**.
 2. Tombol **Bagikan → Tambahkan ke Layar Utama**, lalu buka aplikasi dari ikon
-   "Photobooth" (tampil layar penuh).
+   "Potretin" (tampil layar penuh).
 3. Saat pertama ke halaman foto, **izinkan kamera**. Bila terlanjur menolak:
    Pengaturan → Safari → Kamera → **Izinkan**.
 4. Kunci iPad ke aplikasi dengan **Akses Terpandu**: Pengaturan → Aksesibilitas →

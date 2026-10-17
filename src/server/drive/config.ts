@@ -13,7 +13,7 @@ import "server-only";
  *    `drive.file` — aplikasi hanya bisa melihat berkas yang dibuatnya sendiri).
  *    Ambil refresh token dengan `npm run drive:token`.
  * GOOGLE_DRIVE_ROOT_FOLDER_ID: folder tujuan. Wajib untuk Service Account;
- * untuk OAuth opsional — bila kosong, folder "Street Photobooth" dibuat di
+ * untuk OAuth opsional — bila kosong, folder "Potretin" dibuat di
  * akar My Drive.
  * GOOGLE_DRIVE_MODE=tiruan memaksa mode lokal (pengembangan/uji).
  */

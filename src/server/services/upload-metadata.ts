@@ -20,7 +20,7 @@ export interface UploadMetadata {
   photostripId: string;
   /** Nama berkas unik per sesi (lihat photostripFileName). */
   fileName: string;
-  /** Jalur folder di Drive, dari akar ke bawah: ["Street Photobooth", "2026-10-14"]. */
+  /** Jalur folder di Drive, dari akar ke bawah: ["Potretin", "2026-10-14"]. */
   folderPath: string[];
   mimeType: "image/jpeg";
   sizeBytes: number;
@@ -91,6 +91,6 @@ export async function getUploadMetadata(
     frameName: found.frame.name,
     alreadyUploaded: Boolean(photostrip.driveFileId),
     driveFileId: photostrip.driveFileId,
-    description: `Street Photobooth · frame ${found.frame.name} · ${photostrip.resolution}`,
+    description: `Potretin · frame ${found.frame.name} · ${photostrip.resolution}`,
   };
 }

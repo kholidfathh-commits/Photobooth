@@ -1,8 +1,8 @@
 // Penamaan berkas hasil foto yang unik & rapi per sesi. Murni (tanpa I/O)
 // agar dipakai sama di server (unggah Drive) dan browser (tampilan).
 
-export const FILE_PREFIX = "photobooth";
-export const ROOT_FOLDER_NAME = "Street Photobooth";
+export const FILE_PREFIX = "potretin";
+export const ROOT_FOLDER_NAME = "Potretin";
 /** Zona waktu acara (WIB) — tanggal & jam di nama berkas mengikuti ini. */
 export const DEFAULT_TIME_ZONE = "Asia/Jakarta";
 
@@ -43,8 +43,8 @@ export function slugPart(text: string, max = 24) {
 
 /**
  * Nama berkas unik per sesi:
- * `photobooth_<tanggal>_<jam>_<frame>_<token>.jpg`, mis.
- * photobooth_2026-10-14_0705_cfd-pagi_k3m9x2pqra.jpg.
+ * `potretin_<tanggal>_<jam>_<frame>_<token>.jpg`, mis.
+ * potretin_2026-10-14_0705_klasik-putih_k3m9x2pqra.jpg.
  * Keunikan dijamin oleh token QR (unik di database); tanggal, jam, dan
  * nama frame membuat berkas mudah dicari & urut di Drive.
  */
@@ -63,7 +63,7 @@ export function photostripFileName({
   return `${FILE_PREFIX}_${date}_${time}_${slugPart(frameName)}_${slugPart(qrToken, 32)}.jpg`;
 }
 
-/** Folder Drive per tanggal acara: ["Street Photobooth", "2026-10-14"]. */
+/** Folder Drive per tanggal acara: ["Potretin", "2026-10-14"]. */
 export function photostripFolderPath(
   startedAt: string,
   timeZone = DEFAULT_TIME_ZONE,

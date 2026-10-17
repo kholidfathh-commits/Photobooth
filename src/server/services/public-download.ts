@@ -43,12 +43,12 @@ export async function getPublicDownload(
     .from(uploads)
     .where(eq(uploads.photostripId, strip.id))
     .limit(1);
-  const fileName = upload?.fileName ?? `street-photobooth-${qrToken}.jpg`;
+  const fileName = upload?.fileName ?? `potretin-${qrToken}.jpg`;
   return {
     qrToken,
     imageUrl: `/api/unduh/${qrToken}/berkas`,
     fileName,
-    frameName: found?.frame.name ?? "Street Photobooth",
+    frameName: found?.frame.name ?? "Potretin",
     width: width || 600,
     height: height || 1376,
     createdAt: strip.createdAt,
@@ -78,7 +78,7 @@ export async function getPublicDownloadFile(
   const info = await getPublicDownload(qrToken);
   return {
     data,
-    fileName: info?.fileName ?? `street-photobooth-${qrToken}.jpg`,
+    fileName: info?.fileName ?? `potretin-${qrToken}.jpg`,
     etag: `"${createHash("md5").update(data).digest("hex")}"`,
   };
 }

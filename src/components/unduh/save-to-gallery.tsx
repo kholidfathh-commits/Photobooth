@@ -97,7 +97,7 @@ export function SaveToGallery({ info }: { info: DownloadInfo }) {
       const res = await fetch(fileUrl);
       const blob = await res.blob();
       const file = new File([blob], info.fileName, { type: blob.type });
-      await navigator.share({ files: [file], title: "Foto Street Photobooth" });
+      await navigator.share({ files: [file], title: "Foto Potretin" });
       setSavedVia("bagikan");
     } catch (err) {
       // Dibatalkan pelanggan → diam saja; error lain → unduh file biasa.

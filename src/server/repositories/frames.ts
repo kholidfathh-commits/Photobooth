@@ -16,7 +16,7 @@ interface FrameLayout {
 const DEFAULT_LAYOUT: Required<FrameLayout> = {
   background: "#ffffff",
   accent: "#171717",
-  caption: "Street Photobooth",
+  caption: "Potretin",
 };
 
 /** Ubah baris tabel `frames` menjadi bentuk Frame yang dipakai tata letak. */

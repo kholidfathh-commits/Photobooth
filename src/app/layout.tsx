@@ -18,14 +18,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Street Photobooth",
-    template: "%s · Street Photobooth",
+    default: "Potretin",
+    template: "%s · Potretin",
   },
   description:
     "Photobooth web untuk iPad di CFD, acara kampus, dan event — foto, pilih frame, unduh lewat QR Code.",
   appleWebApp: {
     capable: true,
-    title: "Photobooth",
+    title: "Potretin",
     statusBarStyle: "black-translucent",
   },
 };

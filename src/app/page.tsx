@@ -10,7 +10,7 @@ export default function Home() {
     <main className="relative flex h-dvh flex-col items-center justify-center gap-10 bg-neutral-950 p-6 text-center text-white">
       <div className="space-y-3">
         <p className="text-sm font-semibold tracking-[0.3em] text-neutral-400 uppercase">
-          Street Photobooth
+          Potretin
         </p>
         <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
           Yuk, foto bareng!

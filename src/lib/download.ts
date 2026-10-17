@@ -32,7 +32,7 @@ export function demoDownloadInfo(qrToken: string): DownloadInfo {
   return {
     qrToken,
     imageUrl: "/mock/photostrip-contoh.svg",
-    fileName: `street-photobooth-${qrToken}.jpg`,
+    fileName: `potretin-${qrToken}.jpg`,
     frameName: "CFD Pagi (contoh)",
     width: 600,
     height: 1376,

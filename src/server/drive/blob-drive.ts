@@ -70,7 +70,7 @@ export function createBlobDrive(): DriveService {
     mode: "blob",
 
     async ensureFolderPath(path) {
-      return ["photobooth", ...path].map(safe).join("/");
+      return ["potretin", ...path].map(safe).join("/");
     },
 
     async uploadFile({ name, mimeType, data, folderId }) {

@@ -13,8 +13,7 @@ import { useFrame } from "@/components/frame/frames-provider";
 
 /** Ajakan berbagi acara (sementara data tiruan; nanti dari pengaturan acara). */
 const EVENT_SHARE = {
-  hashtag: "#StreetPhotoboothCFD",
-  account: "@streetphotobooth",
+  hashtag: "#Potretin",
 };
 
 /** Lama layar terima kasih sebelum kembali otomatis ke halaman awal. */
@@ -93,10 +92,6 @@ export function ThanksScreen() {
             Bagikan fotomu di media sosial, pakai{" "}
             <span className="font-semibold text-white">
               {EVENT_SHARE.hashtag}
-            </span>{" "}
-            dan tandai{" "}
-            <span className="font-semibold text-white">
-              {EVENT_SHARE.account}
             </span>{" "}
             — ajak temanmu foto juga, gratis!
           </p>
